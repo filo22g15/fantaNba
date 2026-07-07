@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FantaHezonja Champions — Salary Cap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --court:#101823; --panel:#18222F; --panel-2:#1E2A3A; --line:#2A3849;
+    --ink:#E9EEF4; --muted:#8B99A8; --ball:#F2803B; --ball-soft:rgba(242,128,59,.14);
+    --win:#57C785; --loss:#E4574F; --opt-p:#5BA8E8; --opt-ng:#9AA7B5;
+    --radius:10px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none !important; animation:none !important} }
+  body{
+    background:var(--court); color:var(--ink);
+    font-family:'Barlow',system-ui,sans-serif; font-size:15px; line-height:1.45;
+    background-image:
+      radial-gradient(1200px 500px at 50% -200px, rgba(242,128,59,.07), transparent 60%),
+      repeating-linear-gradient(90deg, transparent 0 119px, rgba(255,255,255,.015) 119px 120px);
+    min-height:100vh;
+  }
+  a{color:inherit; text-decoration:none}
+  button{font:inherit; color:inherit; background:none; border:none; cursor:pointer}
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky; top:0; z-index:40; background:rgba(16,24,35,.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .hwrap{max-width:1180px; margin:0 auto; padding:0 20px; display:flex; align-items:center; gap:22px; height:62px}
+  .logo{display:flex; align-items:baseline; gap:10px; white-space:nowrap}
+  .logo .ball{width:13px; height:13px; border-radius:50%; background:var(--ball); position:relative; top:1px; flex:none;
+    box-shadow:inset -2px -2px 0 rgba(0,0,0,.25)}
+  .logo h1{font-family:'Anton'; font-size:19px; letter-spacing:.04em; font-weight:400}
+  .logo h1 span{color:var(--ball)}
+  nav{display:flex; gap:4px; margin-left:auto}
+  nav a{
+    font-family:'Barlow Condensed'; font-weight:600; font-size:16px; letter-spacing:.08em;
+    padding:7px 14px; border-radius:7px; color:var(--muted); text-transform:uppercase;
+  }
+  nav a:hover{color:var(--ink)}
+  nav a.on{color:var(--ink); background:var(--ball-soft); box-shadow:inset 0 -2px 0 var(--ball)}
+  nav a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, th button:focus-visible{
+    outline:2px solid var(--ball); outline-offset:2px;
+  }
+
+  main{max-width:1180px; margin:0 auto; padding:26px 20px 80px}
+
+  .eyebrow{font-family:'Barlow Condensed'; font-weight:600; letter-spacing:.22em; text-transform:uppercase;
+    font-size:13px; color:var(--ball); margin-bottom:6px}
+  h2.title{font-family:'Anton'; font-weight:400; font-size:34px; letter-spacing:.02em; line-height:1.1; margin-bottom:18px}
+  h2.title small{font-family:'Barlow'; font-size:14px; color:var(--muted); letter-spacing:0; margin-left:12px}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px}
+  .toolbar input, .toolbar select{
+    background:var(--panel); border:1px solid var(--line); color:var(--ink);
+    border-radius:8px; padding:9px 12px; font:inherit; min-width:0;
+  }
+  .toolbar input{flex:1 1 220px}
+  .toolbar select{flex:0 1 auto; appearance:none; padding-right:30px;
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 16px) 55%,calc(100% - 11px) 55%; background-size:5px 5px; background-repeat:no-repeat}
+  .count{align-self:center; color:var(--muted); font-size:13px; margin-left:auto; white-space:nowrap}
+
+  /* ---------- tables ---------- */
+  .tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel)}
+  table{border-collapse:collapse; width:100%; min-width:820px}
+  thead th{
+    font-family:'Barlow Condensed'; font-weight:600; font-size:14px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); text-align:left; padding:11px 12px; border-bottom:1px solid var(--line);
+    position:sticky; top:0; background:var(--panel-2); white-space:nowrap;
+  }
+  thead th.num{text-align:right}
+  thead th button{display:inline-flex; gap:5px; align-items:center; font:inherit; color:inherit; letter-spacing:inherit; text-transform:inherit}
+  thead th button:hover{color:var(--ink)}
+  thead th .dir{color:var(--ball)}
+  tbody td{padding:9px 12px; border-bottom:1px solid rgba(42,56,73,.55); white-space:nowrap}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:rgba(255,255,255,.025)}
+  td.num, .num{font-family:'Barlow Condensed'; font-weight:600; font-size:16px; text-align:right;
+    font-variant-numeric:tabular-nums; letter-spacing:.02em}
+  td.dim{color:var(--muted)}
+  td .zero{color:#3D4C5F}
+  .pname{font-weight:600}
+  .pname a:hover{color:var(--ball)}
+  .ext{color:var(--muted); font-size:12px; opacity:.45; padding:0 2px}
+  tr:hover .ext{opacity:1}
+  .ext:hover{color:var(--ball)}
+  .role{display:inline-block; min-width:30px; text-align:center; font-family:'Barlow Condensed'; font-weight:700; font-size:13px;
+    letter-spacing:.06em; padding:2px 6px; border-radius:5px; background:var(--panel-2); border:1px solid var(--line); color:var(--muted)}
+  .st{font-family:'Barlow Condensed'; font-weight:600; font-size:13px; letter-spacing:.08em; text-transform:uppercase}
+  .st.attivo{color:var(--win)} .st.tagliato{color:var(--loss)} .st.fa{color:var(--opt-p)}
+  .opt{display:inline-block; font-family:'Barlow Condensed'; font-weight:700; font-size:12px; line-height:1;
+    padding:3px 5px; border-radius:4px; margin-left:6px; vertical-align:1px}
+  .opt.T{background:var(--ball-soft); color:var(--ball)}
+  .opt.P{background:rgba(91,168,232,.15); color:var(--opt-p)}
+  .opt.NG{background:rgba(154,167,181,.15); color:var(--opt-ng)}
+  td .pnd{color:#E8C55B; font-style:italic}
+  .rbadge{display:inline-block; font-family:'Barlow Condensed'; font-weight:700; font-size:12px; line-height:1;
+    padding:3px 5px; border-radius:4px; margin-left:6px; vertical-align:1px; font-style:normal;
+    background:rgba(232,197,91,.15); color:#E8C55B}
+  tfoot td{padding:11px 12px; border-top:2px solid var(--line); background:var(--panel-2); font-weight:700}
+
+  /* ---------- team cards ---------- */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:14px}
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 16px 14px; display:flex; flex-direction:column; gap:8px; transition:border-color .15s, transform .15s;
+  }
+  a.card:hover{border-color:var(--ball); transform:translateY(-2px)}
+  .card .tname{font-family:'Anton'; font-weight:400; font-size:19px; letter-spacing:.02em; line-height:1.15}
+  .card .meta{color:var(--muted); font-size:13px; min-height:2.6em}
+  .capline{display:flex; justify-content:space-between; font-family:'Barlow Condensed'; font-weight:600; font-size:14px;
+    letter-spacing:.05em; color:var(--muted); text-transform:uppercase}
+  .capline b{color:var(--ink); font-size:15px}
+  .capline b.over{color:var(--loss)}
+  .capline b.ok{color:var(--win)}
+
+  /* shot-clock cap bar (signature) */
+  .capbar{position:relative; height:10px; border-radius:5px; background:#0B111A; border:1px solid var(--line); overflow:hidden}
+  .capbar .fill{position:absolute; inset:0; width:0; border-radius:5px 0 0 5px;
+    background:linear-gradient(90deg,#C96A2F,var(--ball)); transition:width .5s ease}
+  .capbar .fill.over{background:linear-gradient(90deg,var(--ball),var(--loss))}
+  .capbar .tick{position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--ink); opacity:.55; left:100%}
+
+  /* ---------- team page ---------- */
+  .teamhead{display:flex; flex-wrap:wrap; gap:20px; align-items:flex-end; margin-bottom:20px}
+  .teamhead .back{color:var(--muted); font-size:13px; display:inline-block; margin-bottom:8px}
+  .teamhead .back:hover{color:var(--ball)}
+  .facts{display:flex; flex-wrap:wrap; gap:10px; margin:16px 0 22px}
+  .fact{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:9px 14px}
+  .fact .k{font-family:'Barlow Condensed'; font-weight:600; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+  .fact .v{font-weight:600; font-size:15px}
+  .capgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:24px}
+  .capcell{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; display:flex; flex-direction:column; gap:7px}
+  .capcell .season{font-family:'Barlow Condensed'; font-weight:700; font-size:15px; letter-spacing:.1em; color:var(--muted)}
+  .capcell .big{font-family:'Barlow Condensed'; font-weight:700; font-size:22px; font-variant-numeric:tabular-nums}
+  .capcell .sub{font-size:12.5px; color:var(--muted)}
+  .capcell .sub b{font-variant-numeric:tabular-nums}
+  .sec{font-family:'Barlow Condensed'; font-weight:700; font-size:16px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); margin:26px 0 10px; display:flex; align-items:center; gap:10px}
+  .sec::after{content:""; flex:1; height:1px; background:var(--line)}
+
+  /* ---------- recap ---------- */
+  .legend{display:flex; gap:16px; flex-wrap:wrap; color:var(--muted); font-size:13px; margin:10px 2px 0}
+  .legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; vertical-align:-1px}
+
+  .note{color:var(--muted); font-size:13px; margin-top:14px}
+  .empty{padding:40px; text-align:center; color:var(--muted)}
+
+  @media(max-width:640px){
+    .hwrap{padding:0 14px; gap:10px}
+    .logo h1{font-size:16px}
+    nav a{padding:7px 9px; font-size:14px}
+    main{padding:20px 14px 70px}
+    h2.title{font-size:27px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <a class="logo" href="#/contratti" aria-label="Home">
+      <span class="ball" aria-hidden="true"></span>
+      <h1>FANTAHEZONJA <span>CHAMPIONS</span></h1>
+    </a>
+    <nav id="nav">
+      <a href="#/contratti" data-r="contratti">Contratti</a>
+      <a href="#/squadre" data-r="squadre">Squadre</a>
+      <a href="#/recap" data-r="recap">Recap</a>
+    </nav>
+  </div>
+</header>
+<main id="app"></main>
+
+<script>
+window.LEAGUE = {"league": "FantaHezonja Champions", "cap": 215000000, "seasons": ["2025/26", "2026/27", "2027/28", "2028/29", "2029/30"], "teams": [{"sheet": "Topeka-Forna&Nicc", "name": "TOPEKA ZERO", "gm": "Forna e Nicc", "city": "Topeka", "franchise": "Scottie Barnes", "nomina": "2024/25", "scadenza": "2026/27"}, {"sheet": "Train Blazers-Sven&Africa", "name": "CASCADIA TRAINBLAZERS", "gm": "Sven & Africa", "city": "Cascadia", "franchise": "Mark Williams", "nomina": "2025/2026", "scadenza": "2027/2028"}, {"sheet": "Bandits-Matte", "name": "LAS VENTURAS BANDITS", "gm": "Matteo", "city": "Las Venturas, San Andreas", "franchise": "", "nomina": "", "scadenza": ""}, {"sheet": "Babà Gang-Vincenzo", "name": "SBT BABA GANG", "gm": "Enso, Africa", "city": "San Benedetto del Tronto", "franchise": "Chet Holmgren", "nomina": "2024/25", "scadenza": "2026/27"}, {"sheet": "VVI-VVI", "name": "POINT BARROW VVI", "gm": "VVI", "city": "Point Barrow, Alaska", "franchise": "Aaron Gordon", "nomina": "2025/2026", "scadenza": "2027/2028"}, {"sheet": "Better Call Paul-Pirola", "name": "BETTER CALL PAUL", "gm": "Matteo Pirola", "city": "KATmandu", "franchise": "Luka Doncic", "nomina": "2025/2026", "scadenza": "2027/2028"}, {"sheet": "Terroncino Cavaliers-Luciano", "name": "TERRONCINO CAVALIERS", "gm": "Luccio", "city": "Cleveland, Ohio", "franchise": "TJ McConnell", "nomina": "2024/25", "scadenza": "2026/27"}, {"sheet": "Milano Public Enemies-John", "name": "MILANO PUBLIC ENEMIES", "gm": "John", "city": "Milano", "franchise": "Jalen Duren", "nomina": "2024/25", "scadenza": "2026/27"}, {"sheet": "Orgasmo Magic-Febio", "name": "ORGASMO MAGIC", "gm": "Febio", "city": "Dub, Czeck Republich", "franchise": "Jalen Brunson", "nomina": "2024/25", "scadenza": "2026/27"}, {"sheet": "Rum Protectors-Max", "name": "RUM PROTECTORS", "gm": "Max", "city": "Sassuolo, Italy", "franchise": "LaMelo Ball", "nomina": "2024/25", "scadenza": "2026/27"}, {"sheet": "DDDD Royals-Andre&Samuele", "name": "DILLY DING DILLY DONG ROYALS", "gm": "Andre e Samuele", "city": "Dragoni", "franchise": "", "nomina": "", "scadenza": ""}, {"sheet": "Facial Dunkshot - Hankuccio", "name": "FACIAL DUNKSHOT", "gm": "Hank", "city": "Prato", "franchise": "Paolo Banchero", "nomina": "2025/2026", "scadenza": "2027/2028"}, {"sheet": "Fresno-Sebamegadrive", "name": "FRESNO DRUGDEALERS", "gm": "Seba", "city": "Fresno", "franchise": "Pj Washington", "nomina": "2025/2026", "scadenza": "2027/2028"}, {"sheet": "Outlawz-Antonio", "name": "LOS NAPOLES OUTLAWZ", "gm": "Antonio", "city": "Napoli", "franchise": "Jalen Williams", "nomina": "2025/2026", "scadenza": "2027/2028"}, {"sheet": "Patatinaikos-Filippo", "name": "PATATINAIOKOS1969", "gm": "Filippo", "city": "Firenze, Italy", "franchise": "Bam Adebayo", "nomina": "2025/2026", "scadenza": "2027/2028"}, {"sheet": "Lima Bees-Luca", "name": "LIMA BEES", "gm": "Luca", "city": "Lima", "franchise": "", "nomina": "", "scadenza": ""}, {"sheet": "Chicago - Panino", "name": "CHICAGO HASBULLS", "gm": "Panino", "city": "Chicago", "franchise": "", "nomina": "", "scadenza": ""}, {"sheet": "Gotham City Knights-Auditel", "name": "GOTHAM CITY KNIGHTS", "gm": "Auditel", "city": "Gotham City", "franchise": "Nikola Vucevic", "nomina": "2025/2026", "scadenza": "2027/2028"}, {"sheet": "Partizan Degrado-Seba", "name": "PARTIZAN DEGRADO", "gm": "Seba", "city": "Miami, Florida", "franchise": "Anthony Edwards", "nomina": "2024/25", "scadenza": "2026/27"}, {"sheet": "Slam Drunk-AngeloC&Angelo", "name": "SLAM DRUNK", "gm": "AngeloC e Angelino", "city": "", "franchise": "Christian Braun", "nomina": "2025/2026", "scadenza": "2027/2028"}], "players": [{"n": "Aaron Gordon", "t": "POINT BARROW VVI", "r": "FC", "s": "ATTIVO", "sal": [22841455.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 33658037, 36350680, 39043323, 0]}, {"n": "Aaron Wiggins", "t": "DILLY DING DILLY DONG ROYALS", "r": "GF", "s": "ATTIVO", "sal": [10102803.0, 9224300.0, 8345797.0, 8345797.0, 0.0], "opt": ["", "", "", "T", ""]}, {"n": "Ace Bailey", "t": "LIMA BEES", "r": "F", "s": "ATTIVO", "sal": [9069840.0, 9523080.0, 9976560.0, 12640302.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Adem Bona", "t": "PATATINAIOKOS1969", "r": "C", "s": "ATTIVO", "sal": [1955377.0, 2296271.0, 2486995.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Adou Thiero", "t": "", "r": "F", "s": "", "sal": [1272870.0, 2150917.0, 2525901.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Alex Sarr", "t": "TOPEKA ZERO", "r": "C", "s": "ATTIVO", "sal": [11808240.0, 12370680.0, 15611798.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Alperen Şengün", "t": "CASCADIA TRAINBLAZERS", "r": "C", "s": "ATTIVO", "sal": [33944954.0, 35642202.0, 37339450.0, 39036697.0, 39036697.0], "opt": ["", "", "", "", "P"]}, {"n": "Amen Thompson", "t": "TOPEKA ZERO", "r": "GF", "s": "ATTIVO", "sal": [9690600.0, 12258609.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Andre Drummond", "t": "BETTER CALL PAUL", "r": "C", "s": "ATTIVO", "sal": [5000000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Andre Jackson Jr.", "t": "GOTHAM CITY KNIGHTS", "r": "GF", "s": "TAGLIATO", "sal": [2221677.0, 2406205.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Andrew Wiggins", "t": "LAS VENTURAS BANDITS", "r": "F", "s": "TAGLIATO", "sal": [28223215.0, 30169644.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Anfernee Simons", "t": "SBT BABA GANG", "r": "G", "s": "TAGLIATO", "sal": [27678571.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Anthony Davis", "t": "GOTHAM CITY KNIGHTS", "r": "FC", "s": "ATTIVO", "sal": [54126450.0, 58456566.0, 62786682.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Anthony Edwards", "t": "PARTIZAN DEGRADO", "r": "GF", "s": "ATTIVO", "sal": [45550512.0, 48924624.0, 52298736.0, 55672848.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Ariel Hukporti", "t": "FRESNO DRUGDEALERS", "r": "C", "s": "TAGLIATO", "sal": [1955377.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Asa Newell", "t": "PARTIZAN DEGRADO", "r": "F", "s": "ATTIVO", "sal": [3237480.0, 3399480.0, 3560880.0, 6042814.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Ausar Thompson", "t": "PARTIZAN DEGRADO", "r": "F", "s": "ATTIVO", "sal": [8775000.0, 11117925.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Austin Reaves", "t": "FACIAL DUNKSHOT", "r": "GF", "s": "ATTIVO", "sal": [13937574.0, 14898786.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Ayo Dosonmu", "t": "SBT BABA GANG", "r": "GF", "s": "ATTIVO", "sal": [7518518.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Bam Adebayo", "t": "PATATINAIOKOS1969", "r": "FC", "s": "ATTIVO", "sal": [37096620.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 49800000, 53784000, 57768000, 0]}, {"n": "Ben Saraf", "t": "GOTHAM CITY KNIGHTS", "r": "G", "s": "ATTIVO", "sal": [2884560.0, 3028560.0, 3172920.0, 5720776.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Ben Sheppard", "t": "POINT BARROW VVI", "r": "GF", "s": "ATTIVO", "sal": [2790720.0, 5031669.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Bennedict Mathurin", "t": "GOTHAM CITY KNIGHTS", "r": "GF", "s": "ATTIVO", "sal": [9187573.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Bilal Coulibaly", "t": "TOPEKA ZERO", "r": "GF", "s": "ATTIVO", "sal": [7275600.0, 9240012.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Bobby Portis", "t": "CASCADIA TRAINBLAZERS", "r": "FC", "s": "ATTIVO", "sal": [13445754.0, 14521414.0, 15597074.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Bogdan Bogdanović", "t": "CHICAGO HASBULLS", "r": "GF", "s": "ATTIVO", "sal": [16020000.0, 16020000.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Bradley Beal Taglio", "t": "RUM PROTECTORS", "r": "G", "s": "TAGLIATO", "sal": [53666270.0, 57128610.0, 0.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Brandin Podziemski", "t": "FACIAL DUNKSHOT", "r": "G", "s": "ATTIVO", "sal": [3687960.0, 5679459.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Brandon Clarke", "t": "ORGASMO MAGIC", "r": "F", "s": "TAGLIATO", "sal": [12500000.0, 12500000.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Brandon Miller", "t": "RUM PROTECTORS", "r": "F", "s": "ATTIVO", "sal": [11968800.0, 15104626.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Brice Sensabaugh", "t": "MILANO PUBLIC ENEMIES", "r": "F", "s": "ATTIVO", "sal": [2693760.0, 4862237.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Bronny James", "t": "TERRONCINO CAVALIERS", "r": "G", "s": "ATTIVO", "sal": [1955377.0, 2296271.0, 2486995.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Bub Carrington", "t": "LOS NAPOLES OUTLAWZ", "r": "G", "s": "ATTIVO", "sal": [4677600.0, 4900560.0, 7257730.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Buddy Hield", "t": "BETTER CALL PAUL", "r": "GF", "s": "ATTIVO", "sal": [9219512.0, 9658536.0, 10097560.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Cade Cunningham", "t": "CASCADIA TRAINBLAZERS", "r": "G", "s": "ATTIVO", "sal": [46394100.0, 50105628.0, 53817156.0, 57528684.0, 61240212.0], "opt": ["", "", "", "", ""]}, {"n": "Cam Thomas", "t": "TERRONCINO CAVALIERS", "r": "GF", "s": "ATTIVO", "sal": [5993172.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Cam Whitmore", "t": "LIMA BEES", "r": "F", "s": "ATTIVO", "sal": [3539760.0, 5458310.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Cameron Johnson", "t": "FRESNO DRUGDEALERS", "r": "FC", "s": "ATTIVO", "sal": [21057065.0, 23062500.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Carter Bryant", "t": "MILANO PUBLIC ENEMIES", "r": "F", "s": "ATTIVO", "sal": [4900320.0, 5145360.0, 5390640.0, 7983539.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Cason Wallace", "t": "BETTER CALL PAUL", "r": "GF", "s": "ATTIVO", "sal": [5820240.0, 7420806.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Cedric Coward", "t": "SLAM DRUNK", "r": "F", "s": "ATTIVO", "sal": [5715120.0, 6001080.0, 6286920.0, 8342743.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Chaz Lanier", "t": "SBT BABA GANG", "r": "G", "s": "ATTIVO", "sal": [1272870.0, 2150917.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "NG", "T", ""]}, {"n": "Chet Holmgren", "t": "SLAM DRUNK", "r": "C", "s": "ATTIVO", "sal": [13731368.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 41500000, 44820000, 48140000, 51460000]}, {"n": "Chris Boucher", "t": "PARTIZAN DEGRADO", "r": "F", "s": "ATTIVO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Chris Paul", "t": "BETTER CALL PAUL", "r": "G", "s": "TAGLIATO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Christian Braun", "t": "SLAM DRUNK", "r": "GF", "s": "TAGLIATO", "sal": [4921797.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Coby White", "t": "LIMA BEES", "r": "GF", "s": "ATTIVO", "sal": [12888889.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Cody Williams", "t": "CHICAGO HASBULLS", "r": "GF", "s": "ATTIVO", "sal": [5742480.0, 6015600.0, 7669890.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Cole Anthony", "t": "GOTHAM CITY KNIGHTS", "r": "G", "s": "ATTIVO", "sal": [13100000.0, 13100000.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 0, 3700000, 0, 0]}, {"n": "Collin Murray-Boyles", "t": "LOS NAPOLES OUTLAWZ", "r": "F", "s": "ATTIVO", "sal": [6332520.0, 6649560.0, 6966000.0, 8874684.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Collin Sexton", "t": "MILANO PUBLIC ENEMIES", "r": "G", "s": "ATTIVO", "sal": [18975000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Cooper Flagg", "t": "CASCADIA TRAINBLAZERS", "r": "F", "s": "ATTIVO", "sal": [13825920.0, 14517480.0, 15208680.0, 19178146.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Craig Porter", "t": "ORGASMO MAGIC", "r": "G", "s": "ATTIVO", "sal": [2221677.0, 2406205.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Dalton Knecht", "t": "LOS NAPOLES OUTLAWZ", "r": "GF", "s": "ATTIVO", "sal": [4010160.0, 4201080.0, 6452860.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Damian Lillard", "t": "LAS VENTURAS BANDITS", "r": "G", "s": "ATTIVO", "sal": [14104000.0, 13398000.0, 14104000.0, 0.0, 0.0], "opt": ["", "", "P", "", ""], "pnd": [0, 0, 0, 22516603, 22516603]}, {"n": "Daniel Gafford", "t": "ORGASMO MAGIC", "r": "FC", "s": "ATTIVO", "sal": [14386320.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 17263584, 18126763, 18989942, 0]}, {"n": "Danny Wolf", "t": "LAS VENTURAS BANDITS", "r": "FC", "s": "ATTIVO", "sal": [2801280.0, 2941440.0, 3081840.0, 5559640.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Dario Šarić", "t": "LAS VENTURAS BANDITS", "r": "C", "s": "ATTIVO", "sal": [5426400.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Darius Garland", "t": "DILLY DING DILLY DONG ROYALS", "r": "G", "s": "ATTIVO", "sal": [39446090.0, 42166510.0, 44886930.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "DaRon Holmes II", "t": "BETTER CALL PAUL", "r": "F", "s": "ATTIVO", "sal": [3218760.0, 3372120.0, 5547138.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Day'ron Sharpe", "t": "CASCADIA TRAINBLAZERS", "r": "C", "s": "ATTIVO", "sal": [6250000.0, 6250000.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "De'Aaron Fox", "t": "CHICAGO HASBULLS", "r": "G", "s": "ATTIVO", "sal": [37096620.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 49800000, 53784000, 57768000, 61752000]}, {"n": "Deandre Ayton", "t": "FRESNO DRUGDEALERS", "r": "C", "s": "ATTIVO", "sal": [35550814.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 8104000, 0, 0, 0]}, {"n": "Dejounte Murray", "t": "SBT BABA GANG", "r": "G", "s": "ATTIVO", "sal": [31557102.0, 33597070.0, 31619503.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "DeMar DeRozan", "t": "MILANO PUBLIC ENEMIES", "r": "F", "s": "ATTIVO", "sal": [24750000.0, 25740000.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Deni Avdija", "t": "LAS VENTURAS BANDITS", "r": "F", "s": "ATTIVO", "sal": [14375000.0, 13125000.0, 11875000.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Dereck Lively II", "t": "CHICAGO HASBULLS", "r": "C", "s": "ATTIVO", "sal": [5253360.0, 7239131.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Derik Queen", "t": "RUM PROTECTORS", "r": "C", "s": "ATTIVO", "sal": [5157960.0, 5416080.0, 5673840.0, 8107918.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Desmond Bane", "t": "GOTHAM CITY KNIGHTS", "r": "GF", "s": "ATTIVO", "sal": [36725670.0, 39446090.0, 42166510.0, 44886930.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Devin Booker", "t": "FRESNO DRUGDEALERS", "r": "G", "s": "ATTIVO", "sal": [53142264.0, 57078728.0, 61015192.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 0, 0, 64065952, 69191228]}, {"n": "Devin Carter", "t": "LAS VENTURAS BANDITS", "r": "G", "s": "ATTIVO", "sal": [4923720.0, 5158080.0, 7370897.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Devin Vassell", "t": "PARTIZAN DEGRADO", "r": "G", "s": "ATTIVO", "sal": [27000000.0, 27000000.0, 24652174.0, 27000000.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Dillon Jones", "t": "PATATINAIOKOS1969", "r": "FC", "s": "ATTIVO", "sal": [2753280.0, 2884440.0, 5200646.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Domantas Sabonis", "t": "POINT BARROW VVI", "r": "C", "s": "ATTIVO", "sal": [42336000.0, 45472000.0, 48608000.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Donovan Clingan", "t": "RUM PROTECTORS", "r": "C", "s": "ATTIVO", "sal": [7178400.0, 7519920.0, 9550298.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Donte DiVincenzo", "t": "PATATINAIOKOS1969", "r": "GF", "s": "ATTIVO", "sal": [11990000.0, 12535000.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Drake Powell", "t": "", "r": "G", "s": "", "sal": [3372240.0, 3540600.0, 3709320.0, 6101832.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Duop Reath", "t": "DILLY DING DILLY DONG ROYALS", "r": "C", "s": "TAGLIATO", "sal": [2221677.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Dwight Powell", "t": "POINT BARROW VVI", "r": "C", "s": "TAGLIATO", "sal": [4000000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Dylan Harper", "t": "POINT BARROW VVI", "r": "G", "s": "ATTIVO", "sal": [12370320.0, 12989040.0, 13607760.0, 17172994.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Dyson Daniels", "t": "SBT BABA GANG", "r": "G", "s": "ATTIVO", "sal": [7707709.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 25000000, 25000000, 25000000, 25000000]}, {"n": "Egor Demin", "t": "TOPEKA ZERO", "r": "G", "s": "ATTIVO", "sal": [6889200.0, 7233720.0, 7578240.0, 9639522.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Evan Mobley", "t": "TOPEKA ZERO", "r": "FC", "s": "ATTIVO", "sal": [46394100.0, 50105628.0, 53817156.0, 57528684.0, 61240212.0], "opt": ["", "", "", "", ""]}, {"n": "Franz Wagner", "t": "SBT BABA GANG", "r": "F", "s": "ATTIVO", "sal": [38661750.0, 41754690.0, 44847630.0, 47940570.0, 51033510.0], "opt": ["", "", "", "", ""]}, {"n": "GG Jackson Taglio", "t": "LOS NAPOLES OUTLAWZ", "r": "FC", "s": "TAGLIATO", "sal": [2221677.0, 2406205.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Giannis Antetokounmpo", "t": "TERRONCINO CAVALIERS", "r": "FC", "s": "ATTIVO", "sal": [54126450.0, 58456566.0, 62786682.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Goga Bitadze", "t": "TERRONCINO CAVALIERS", "r": "C", "s": "ATTIVO", "sal": [8333333.0, 7608696.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Gradey Dick", "t": "MILANO PUBLIC ENEMIES", "r": "GF", "s": "ATTIVO", "sal": [4990560.0, 7131511.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Grant Williams", "t": "POINT BARROW VVI", "r": "F", "s": "ATTIVO", "sal": [13645500.0, 14265750.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Hugo Gonzalez", "t": "MILANO PUBLIC ENEMIES", "r": "F", "s": "ATTIVO", "sal": [2783880.0, 2923560.0, 3062640.0, 5528065.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Isaiah Collier", "t": "ORGASMO MAGIC", "r": "G", "s": "ATTIVO", "sal": [2638200.0, 2763960.0, 4988948.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Ivica Zubac", "t": "FACIAL DUNKSHOT", "r": "C", "s": "ATTIVO", "sal": [18102000.0, 19550160.0, 20998320.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Ja Morant", "t": "PARTIZAN DEGRADO", "r": "G", "s": "ATTIVO", "sal": [39446090.0, 42166510.0, 44886930.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jabari Smith Jr", "t": "SBT BABA GANG", "r": "FC", "s": "ATTIVO", "sal": [12350392.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 23643411, 21751940, 23643411, 25534883]}, {"n": "Jaden Ivey", "t": "", "r": "G", "s": "", "sal": [10107163.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jaime Jaquez Jr", "t": "ORGASMO MAGIC", "r": "GF", "s": "ATTIVO", "sal": [3861600.0, 5939141.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Jake LaRavia", "t": "SBT BABA GANG", "r": "F", "s": "ATTIVO", "sal": [6000000.0, 6000000.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jakob Poeltl", "t": "SLAM DRUNK", "r": "C", "s": "ATTIVO", "sal": [19500000.0, 19500000.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""], "pnd": [0, 0, 27300000, 29484000, 27300000]}, {"n": "Jalen Brunson", "t": "ORGASMO MAGIC", "r": "G", "s": "ATTIVO", "sal": [34944001.0, 37739521.0, 40535041.0, 43330561.0, 0.0], "opt": ["", "", "", "P", ""]}, {"n": "Jalen Duren", "t": "MILANO PUBLIC ENEMIES", "r": "C", "s": "ATTIVO", "sal": [6483144.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jalen Green", "t": "MILANO PUBLIC ENEMIES", "r": "G", "s": "ATTIVO", "sal": [33584499.0, 36251166.0, 36000000.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Jalen Johnson", "t": "FACIAL DUNKSHOT", "r": "F", "s": "ATTIVO", "sal": [30000000.0, 30000000.0, 30000000.0, 30000000.0, 30000000.0], "opt": ["", "", "", "", ""]}, {"n": "Jalen Smith", "t": "POINT BARROW VVI", "r": "FC", "s": "ATTIVO", "sal": [9000000.0, 9428571.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jalen Williams", "t": "LOS NAPOLES OUTLAWZ", "r": "GF", "s": "ATTIVO", "sal": [6580997.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 41500000, 44820000, 48140000, 51460000]}, {"n": "Jalen Wilson", "t": "FRESNO DRUGDEALERS", "r": "F", "s": "ATTIVO", "sal": [2221677.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "James Harden", "t": "PATATINAIOKOS1969", "r": "G", "s": "ATTIVO", "sal": [39182693.0, 42317307.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Jared McCain", "t": "POINT BARROW VVI", "r": "G", "s": "ATTIVO", "sal": [4221360.0, 4422600.0, 6784268.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Jaren Jackson Jr. Taglio", "t": "DILLY DING DILLY DONG ROYALS", "r": "FC", "s": "TAGLIATO", "sal": [35000000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jarrett Allen", "t": "ORGASMO MAGIC", "r": "FC", "s": "ATTIVO", "sal": [20000000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 28000000, 30240000, 32480000, 0]}, {"n": "Jase Richardson", "t": "SBT BABA GANG", "r": "G", "s": "ATTIVO", "sal": [2983320.0, 3132360.0, 3282000.0, 5910882.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Jay Huff", "t": "SLAM DRUNK", "r": "C", "s": "ATTIVO", "sal": [2349578.0, 2667944.0, 3005085.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Jaylen Brown", "t": "POINT BARROW VVI", "r": "GF", "s": "ATTIVO", "sal": [53142264.0, 57078728.0, 61015192.0, 64951656.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jaylen Wells", "t": "SBT BABA GANG", "r": "GF", "s": "ATTIVO", "sal": [1955377.0, 2296271.0, 2486995.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Jaylin Williams", "t": "", "r": "FC", "s": "", "sal": [2187699.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 7774648, 7774648, 0, 0]}, {"n": "Jaylon Tyson", "t": "LAS VENTURAS BANDITS", "r": "GF", "s": "ATTIVO", "sal": [3492480.0, 3658560.0, 5641500.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Jayson Tatum", "t": "SLAM DRUNK", "r": "F", "s": "ATTIVO", "sal": [54126450.0, 58456566.0, 62786682.0, 67116798.0, 71446914.0], "opt": ["", "", "", "", "P"]}, {"n": "Jeremiah Fears", "t": "RUM PROTECTORS", "r": "G", "s": "ATTIVO", "sal": [7520040.0, 7896240.0, 8271960.0, 10505389.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Jeremy Sochan", "t": "PARTIZAN DEGRADO", "r": "F", "s": "ATTIVO", "sal": [7096231.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jett Howard", "t": "MILANO PUBLIC ENEMIES", "r": "F", "s": "TAGLIATO", "sal": [5529720.0, 7337939.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Joan Beringer", "t": "GOTHAM CITY KNIGHTS", "r": "C", "s": "ATTIVO", "sal": [4201080.0, 4411200.0, 4621200.0, 7098163.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Joel Embiid", "t": "PARTIZAN DEGRADO", "r": "C", "s": "ATTIVO", "sal": [55224526.0, 59033114.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""], "pnd": [0, 0, 62748000, 67396000, 0]}, {"n": "John Collins", "t": "BETTER CALL PAUL", "r": "FC", "s": "ATTIVO", "sal": [26580000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Johni Broome", "t": "", "r": "FC", "s": "", "sal": [1272870.0, 2150917.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "NG", "T", ""]}, {"n": "Jonas Valančiūnas", "t": "FACIAL DUNKSHOT", "r": "C", "s": "ATTIVO", "sal": [10395000.0, 10000000.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jonathan Isaac", "t": "GOTHAM CITY KNIGHTS", "r": "FC", "s": "ATTIVO", "sal": [15000000.0, 14500000.0, 14500000.0, 15000000.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jonathan Kuminga", "t": "MILANO PUBLIC ENEMIES", "r": "FC", "s": "ATTIVO", "sal": [22500000.0, 24300000.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Jonathan Mogbo", "t": "CHICAGO HASBULLS", "r": "FC", "s": "ATTIVO", "sal": [1955377.0, 2296271.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Jordan Hawkins", "t": "LOS NAPOLES OUTLAWZ", "r": "GF", "s": "ATTIVO", "sal": [4741320.0, 7021895.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Jordan Poole", "t": "MILANO PUBLIC ENEMIES", "r": "G", "s": "ATTIVO", "sal": [31848215.0, 34044642.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Josh Giddey", "t": "CHICAGO HASBULLS", "r": "G", "s": "ATTIVO", "sal": [25000000.0, 25000000.0, 25000000.0, 25000000.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Josh Hart", "t": "TERRONCINO CAVALIERS", "r": "F", "s": "ATTIVO", "sal": [19472240.0, 20923760.0, 22375280.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Julian Champagnie", "t": "LIMA BEES", "r": "F", "s": "TAGLIATO", "sal": [3000000.0, 3000000.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Julius Randle", "t": "FACIAL DUNKSHOT", "r": "F", "s": "ATTIVO", "sal": [30864198.0, 33333334.0, 35802468.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Jusuf Nurkić", "t": "SBT BABA GANG", "r": "C", "s": "ATTIVO", "sal": [19375000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Kam Jones", "t": "", "r": "G", "s": "", "sal": [1272870.0, 2150917.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "NG", "T", ""]}, {"n": "Karl-Anthony Towns", "t": "FACIAL DUNKSHOT", "r": "F", "s": "ATTIVO", "sal": [53142264.0, 57078728.0, 61015192.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Karlo Matkovic", "t": "FACIAL DUNKSHOT", "r": "FC", "s": "TAGLIATO", "sal": [1955377.0, 2296271.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Kasparas Jakucionis", "t": "RUM PROTECTORS", "r": "G", "s": "ATTIVO", "sal": [3658800.0, 3841680.0, 4024440.0, 6205687.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Keegan Murray", "t": "CHICAGO HASBULLS", "r": "F", "s": "ATTIVO", "sal": [11144093.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 24137936, 26068965, 27999999, 29931033]}, {"n": "Kel'el Ware", "t": "TOPEKA ZERO", "r": "C", "s": "ATTIVO", "sal": [4443360.0, 4654920.0, 7135992.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Keldon Johnson", "t": "CASCADIA TRAINBLAZERS", "r": "GF", "s": "ATTIVO", "sal": [17500000.0, 17500000.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Kelly Olynyk", "t": "BETTER CALL PAUL", "r": "FC", "s": "ATTIVO", "sal": [13445122.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Kelly Oubre Jr", "t": "", "r": "GF", "s": "", "sal": [8382150.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Kenrich Williams", "t": "CHICAGO HASBULLS", "r": "FC", "s": "ATTIVO", "sal": [7163000.0, 7163000.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Keon Ellis", "t": "BETTER CALL PAUL", "r": "GF", "s": "ATTIVO", "sal": [2301587.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Keon Johnson", "t": "FRESNO DRUGDEALERS", "r": "G", "s": "ATTIVO", "sal": [2349578.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Keshad Johnson", "t": "PARTIZAN DEGRADO", "r": "F", "s": "ATTIVO", "sal": [1955377.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Kevin Durant", "t": "RUM PROTECTORS", "r": "FC", "s": "ATTIVO", "sal": [54708609.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 43902439, 46097561, 0, 0]}, {"n": "Kevin Love", "t": "", "r": "FC", "s": "", "sal": [4150000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Kevin Porter Jr.", "t": "FACIAL DUNKSHOT", "r": "GF", "s": "ATTIVO", "sal": [5134000.0, 5390700.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Kevon Looney", "t": "FRESNO DRUGDEALERS", "r": "C", "s": "ATTIVO", "sal": [8000000.0, 8000000.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Keyonte George", "t": "FACIAL DUNKSHOT", "r": "G", "s": "ATTIVO", "sal": [4278960.0, 6563925.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Khaman Maluach", "t": "CHICAGO HASBULLS", "r": "C", "s": "ATTIVO", "sal": [6016080.0, 6316680.0, 6617160.0, 8436880.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Kobe Bufkin", "t": "", "r": "G", "s": "", "sal": [4503720.0, 6904203.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Kon Knueppel", "t": "LOS NAPOLES OUTLAWZ", "r": "GF", "s": "ATTIVO", "sal": [10015680.0, 10516560.0, 11017560.0, 13937214.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Kristaps Porziņģis", "t": "BETTER CALL PAUL", "r": "C", "s": "ATTIVO", "sal": [30731707.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 19512195, 20487805, 0, 0]}, {"n": "Kyle Anderson", "t": "ORGASMO MAGIC", "r": "F", "s": "TAGLIATO", "sal": [9219512.0, 9658536.0, 0.0, 0.0, 0.0], "opt": ["", "NG", "", "", ""]}, {"n": "Kyle Filipowski", "t": "LIMA BEES", "r": "FC", "s": "ATTIVO", "sal": [3000000.0, 3000000.0, 3000000.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Kyle Kuzma", "t": "SBT BABA GANG", "r": "F", "s": "TAGLIATO", "sal": [22410605.0, 20365152.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Kyshawn George", "t": "CHICAGO HASBULLS", "r": "GF", "s": "ATTIVO", "sal": [2966760.0, 3108000.0, 5435892.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "LaMelo Ball", "t": "TOPEKA ZERO", "r": "G", "s": "ATTIVO", "sal": [37958760.0, 40770520.0, 43582280.0, 46394040.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Lauri Markkanen", "t": "BETTER CALL PAUL", "r": "F", "s": "ATTIVO", "sal": [46394100.0, 46113154.0, 49824681.0, 53536209.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Lebron James", "t": "TERRONCINO CAVALIERS", "r": "F", "s": "ATTIVO", "sal": [52627153.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Leonard Miller", "t": "FRESNO DRUGDEALERS", "r": "FC", "s": "ATTIVO", "sal": [2221677.0, 2406205.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Liam McNeeley", "t": "", "r": "F", "s": "", "sal": [2763960.0, 2902080.0, 3040320.0, 5487778.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Lonzo Ball", "t": "", "r": "G", "s": "", "sal": [10000000.0, 10000000.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Luka Dončić", "t": "BETTER CALL PAUL", "r": "G", "s": "ATTIVO", "sal": [45999660.0, 48967380.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 0, 53784000, 57768000, 0]}, {"n": "Luka Garza", "t": "SLAM DRUNK", "r": "FC", "s": "ATTIVO", "sal": [2461463.0, 2801346.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Malik Monk", "t": "DILLY DING DILLY DONG ROYALS", "r": "G", "s": "ATTIVO", "sal": [18797619.0, 20190035.0, 21582451.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Mark Williams", "t": "FRESNO DRUGDEALERS", "r": "C", "s": "ATTIVO", "sal": [6276531.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Marvin Bagley", "t": "RUM PROTECTORS", "r": "FC", "s": "ATTIVO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Matas Buzelis", "t": "TOPEKA ZERO", "r": "F", "s": "ATTIVO", "sal": [5455560.0, 5715360.0, 7584283.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Maxime Raynaud", "t": "LOS NAPOLES OUTLAWZ", "r": "C", "s": "ATTIVO", "sal": [1272870.0, 2150917.0, 2525901.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Micah Peavy", "t": "", "r": "GF", "s": "", "sal": [1272870.0, 2150917.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "NG", "T", ""]}, {"n": "Mikal Bridges taglio", "t": "LAS VENTURAS BANDITS", "r": "GF", "s": "TAGLIATO", "sal": [24900000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Mitchell Robinson", "t": "SLAM DRUNK", "r": "C", "s": "ATTIVO", "sal": [12954546.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Moritz Wagner", "t": "LIMA BEES", "r": "C", "s": "ATTIVO", "sal": [5000000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Mouhamed Gueye", "t": "ORGASMO MAGIC", "r": "FC", "s": "ATTIVO", "sal": [2221677.0, 2406205.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Myles Turner", "t": "PATATINAIOKOS1969", "r": "C", "s": "ATTIVO", "sal": [25318251.0, 26584164.0, 27850077.0, 29115990.0, 0.0], "opt": ["", "", "", "P", ""]}, {"n": "Naji Marshall", "t": "POINT BARROW VVI", "r": "F", "s": "ATTIVO", "sal": [9000000.0, 9428571.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Naz Reid", "t": "LOS NAPOLES OUTLAWZ", "r": "FC", "s": "ATTIVO", "sal": [21551724.0, 23275862.0, 25000000.0, 26724138.0, 28448276.0], "opt": ["", "", "", "", "P"]}, {"n": "Nick Richards", "t": "CHICAGO HASBULLS", "r": "C", "s": "ATTIVO", "sal": [5000000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Nicolas Claxton", "t": "GOTHAM CITY KNIGHTS", "r": "C", "s": "ATTIVO", "sal": [25352272.0, 23147727.0, 20943184.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Nikola Jokić", "t": "LAS VENTURAS BANDITS", "r": "C", "s": "ATTIVO", "sal": [55224526.0, 59033114.0, 62841702.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Nikola Jovic", "t": "MILANO PUBLIC ENEMIES", "r": "FC", "s": "ATTIVO", "sal": [4445417.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 16200000, 14904000, 15096000, 16200000]}, {"n": "Nikola Topic", "t": "POINT BARROW VVI", "r": "G", "s": "ATTIVO", "sal": [5182920.0, 5429760.0, 7482210.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Nikola Vučević", "t": "GOTHAM CITY KNIGHTS", "r": "C", "s": "ATTIVO", "sal": [21481481.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Nique Clifford", "t": "RUM PROTECTORS", "r": "GF", "s": "ATTIVO", "sal": [3108120.0, 3263400.0, 3418800.0, 5979481.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Noa Essengue", "t": "GOTHAM CITY KNIGHTS", "r": "F", "s": "ATTIVO", "sal": [5429520.0, 5701200.0, 5972760.0, 8230464.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Noah Penda", "t": "LOS NAPOLES OUTLAWZ", "r": "F", "s": "ATTIVO", "sal": [1272870.0, 2150917.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "", "T", ""]}, {"n": "Nolan Traore", "t": "PARTIZAN DEGRADO", "r": "G", "s": "ATTIVO", "sal": [3811560.0, 4002000.0, 4193040.0, 6457282.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Norman Powell", "t": "MILANO PUBLIC ENEMIES", "r": "GF", "s": "ATTIVO", "sal": [20482758.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Obi Toppin", "t": "TERRONCINO CAVALIERS", "r": "FC", "s": "ATTIVO", "sal": [14000000.0, 15000000.0, 16025000.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Onyeka Okongwu", "t": "PATATINAIOKOS1969", "r": "C", "s": "ATTIVO", "sal": [15000000.0, 16100000.0, 16880000.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Oso Ighodaro", "t": "CASCADIA TRAINBLAZERS", "r": "FC", "s": "ATTIVO", "sal": [1955377.0, 2296271.0, 2486995.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "P.J. Washington", "t": "FRESNO DRUGDEALERS", "r": "F", "s": "ATTIVO", "sal": [14152174.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 19813044, 21398088, 22983132, 24568176]}, {"n": "Paolo Banchero", "t": "LIMA BEES", "r": "F", "s": "ATTIVO", "sal": [15334769.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 41500000, 44820000, 48140000, 51460000]}, {"n": "Paul Reed", "t": "RUM PROTECTORS", "r": "C", "s": "ATTIVO", "sal": [5335894.0, 5602689.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Payton Pritchard", "t": "TERRONCINO CAVALIERS", "r": "G", "s": "ATTIVO", "sal": [7232143.0, 7767857.0, 8303571.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Pelle Larsson", "t": "LAS VENTURAS BANDITS", "r": "GF", "s": "ATTIVO", "sal": [1955378.0, 2296271.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Peyton Watson", "t": "SBT BABA GANG", "r": "GF", "s": "ATTIVO", "sal": [4356476.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Quinten Post", "t": "ORGASMO MAGIC", "r": "C", "s": "ATTIVO", "sal": [1955377.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Rasheer Fleming", "t": "MILANO PUBLIC ENEMIES", "r": "F", "s": "ATTIVO", "sal": [1272870.0, 2150917.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "NG", "T", ""]}, {"n": "Rayan Rupert", "t": "LIMA BEES", "r": "GF", "s": "TAGLIATO", "sal": [2221677.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Reed Sheppard", "t": "PARTIZAN DEGRADO", "r": "G", "s": "ATTIVO", "sal": [10603560.0, 11108880.0, 14041625.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "RJ Barrett", "t": "LIMA BEES", "r": "F", "s": "ATTIVO", "sal": [27705357.0, 29616071.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Rob Dillingham", "t": "DILLY DING DILLY DONG ROYALS", "r": "G", "s": "ATTIVO", "sal": [6576120.0, 6889320.0, 8763216.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Robert Williams", "t": "TERRONCINO CAVALIERS", "r": "FC", "s": "ATTIVO", "sal": [13285713.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 13968254, 14666667, 15365079, 0]}, {"n": "Ron Holland", "t": "GOTHAM CITY KNIGHTS", "r": "F", "s": "ATTIVO", "sal": [8657280.0, 9069600.0, 11491183.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Rudy Gobert", "t": "LOS NAPOLES OUTLAWZ", "r": "C", "s": "ATTIVO", "sal": [35000000.0, 36500000.0, 38000000.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Rui Hachimura", "t": "LOS NAPOLES OUTLAWZ", "r": "F", "s": "TAGLIATO", "sal": [18259259.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Ryan Dunn", "t": "PARTIZAN DEGRADO", "r": "F", "s": "ATTIVO", "sal": [2657760.0, 2784240.0, 5025553.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Ryan Kalkbrenner", "t": "LIMA BEES", "r": "C", "s": "ATTIVO", "sal": [2296274.0, 2411090.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "NG", "T", ""]}, {"n": "Saddiq Bey taglio", "t": "MILANO PUBLIC ENEMIES", "r": "F", "s": "TAGLIATO", "sal": [6118644.0, 6440678.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Sam Hauser", "t": "", "r": "GF", "s": "", "sal": [0.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Santi Aldama", "t": "FRESNO DRUGDEALERS", "r": "FC", "s": "ATTIVO", "sal": [18485916.0, 17007043.0, 17007043.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Scoot Henderson", "t": "CHICAGO HASBULLS", "r": "G", "s": "ATTIVO", "sal": [10748040.0, 13585523.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Scottie Barnes", "t": "TOPEKA ZERO", "r": "F", "s": "ATTIVO", "sal": [38661750.0, 41754690.0, 44847630.0, 47940570.0, 51033510.0], "opt": ["", "", "", "", ""]}, {"n": "Scotty Pippen Jr.", "t": "FRESNO DRUGDEALERS", "r": "G", "s": "ATTIVO", "sal": [2270735.0, 2461462.0, 2789215.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Shaedon Sharpe", "t": "LIMA BEES", "r": "GF", "s": "ATTIVO", "sal": [8399983.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 20089287, 21696429, 23303571, 24910713]}, {"n": "Shai Gilgeous-Alexander", "t": "SBT BABA GANG", "r": "G", "s": "ATTIVO", "sal": [38333050.0, 40806150.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 0, 61005000, 65885400, 70765800]}, {"n": "Sion James", "t": "PATATINAIOKOS1969", "r": "F", "s": "ATTIVO", "sal": [2296274.0, 2411090.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "NG", "T", ""]}, {"n": "Stephen Curry", "t": "ORGASMO MAGIC", "r": "G", "s": "ATTIVO", "sal": [59606817.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 62587158, 0, 0, 0]}, {"n": "Stephon Castle", "t": "LIMA BEES", "r": "G", "s": "ATTIVO", "sal": [9560520.0, 10015920.0, 12670139.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "T.J. McConnell", "t": "TERRONCINO CAVALIERS", "r": "G", "s": "ATTIVO", "sal": [10200000.0, 11000000.0, 11800000.0, 11800000.0, 0.0], "opt": ["", "", "", "T", ""]}, {"n": "Tari Eason", "t": "LOS NAPOLES OUTLAWZ", "r": "F", "s": "ATTIVO", "sal": [5675766.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Taylor Hendricks", "t": "BETTER CALL PAUL", "r": "F", "s": "ATTIVO", "sal": [6127080.0, 7805900.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Terrence Shannon", "t": "RUM PROTECTORS", "r": "F", "s": "TAGLIATO", "sal": [2674080.0, 2801640.0, 5054159.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Thomas Sorber", "t": "LOS NAPOLES OUTLAWZ", "r": "FC", "s": "ATTIVO", "sal": [4655040.0, 4887720.0, 5120400.0, 7849573.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Tidjane Salaun", "t": "DILLY DING DILLY DONG ROYALS", "r": "FC", "s": "ATTIVO", "sal": [7863240.0, 8237880.0, 10445633.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Toumani Camara", "t": "MILANO PUBLIC ENEMIES", "r": "F", "s": "ATTIVO", "sal": [2221677.0, 2406205.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Trae Young", "t": "LOS NAPOLES OUTLAWZ", "r": "G", "s": "ATTIVO", "sal": [45999660.0, 48967380.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Trayce Jackson-Davis", "t": "CASCADIA TRAINBLAZERS", "r": "FC", "s": "ATTIVO", "sal": [2221677.0, 2406205.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Tre Johnson", "t": "DILLY DING DILLY DONG ROYALS", "r": "G", "s": "ATTIVO", "sal": [8237640.0, 8649600.0, 9061680.0, 11490211.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Tre Jones", "t": "TOPEKA ZERO", "r": "G", "s": "ATTIVO", "sal": [8000000.0, 8000000.0, 8000000.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Trendon Watford", "t": "DILLY DING DILLY DONG ROYALS", "r": "FC", "s": "ATTIVO", "sal": [2461463.0, 2801346.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Trey Murphy III", "t": "ORGASMO MAGIC", "r": "F", "s": "ATTIVO", "sal": [25000000.0, 27000000.0, 29000000.0, 31000000.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Tristan Da Silva", "t": "LAS VENTURAS BANDITS", "r": "GF", "s": "ATTIVO", "sal": [3809520.0, 3991200.0, 6138466.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Ty Jerome", "t": "SLAM DRUNK", "r": "GF", "s": "ATTIVO", "sal": [8781000.0, 9220050.0, 9659100.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Tyler Herro", "t": "LIMA BEES", "r": "G", "s": "ATTIVO", "sal": [31000000.0, 33000000.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Tyler Kolek", "t": "PATATINAIOKOS1969", "r": "G", "s": "ATTIVO", "sal": [2191897.0, 2296271.0, 2486995.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Tyrese Haliburton", "t": "CASCADIA TRAINBLAZERS", "r": "G", "s": "ATTIVO", "sal": [45550512.0, 48924624.0, 52298736.0, 55672848.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Tyrese Maxey", "t": "SLAM DRUNK", "r": "G", "s": "ATTIVO", "sal": [37978560.0, 40770520.0, 43582280.0, 46394040.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Tyrese Proctor", "t": "FRESNO DRUGDEALERS", "r": "G", "s": "ATTIVO", "sal": [1272870.0, 2150917.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "", "T", ""]}, {"n": "Victor Wembanyama", "t": "SLAM DRUNK", "r": "C", "s": "ATTIVO", "sal": [13376880.0, 16868246.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Vince Williams Jr. taglio", "t": "FACIAL DUNKSHOT", "r": "G", "s": "TAGLIATO", "sal": [2301587.0, 2489752.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Vit Krejci", "t": "FACIAL DUNKSHOT", "r": "G", "s": "ATTIVO", "sal": [2349578.0, 2667944.0, 3005085.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "VJ Edgecombe", "t": "DILLY DING DILLY DONG ROYALS", "r": "G", "s": "ATTIVO", "sal": [11108880.0, 11663880.0, 12219840.0, 15445878.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Walker Kessler", "t": "PARTIZAN DEGRADO", "r": "C", "s": "ATTIVO", "sal": [4878938.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Walter Clayton Jr", "t": "RUM PROTECTORS", "r": "G", "s": "ATTIVO", "sal": [3991320.0, 4190520.0, 4390320.0, 6752312.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Wendell Carter Jr.", "t": "SBT BABA GANG", "r": "FC", "s": "ATTIVO", "sal": [10850000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 18102000, 19550160, 20998320, 0]}, {"n": "Will Riley", "t": "RUM PROTECTORS", "r": "GF", "s": "ATTIVO", "sal": [3512520.0, 3688320.0, 3864000.0, 6155352.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Xavier Tillman", "t": "TERRONCINO CAVALIERS", "r": "FC", "s": "ATTIVO", "sal": [2546675.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Yang Hansen", "t": "GOTHAM CITY KNIGHTS", "r": "C", "s": "ATTIVO", "sal": [4422360.0, 4643520.0, 4864920.0, 7462788.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Yanic Konan Niederhauser", "t": "", "r": "C", "s": "", "sal": [2743800.0, 2880960.0, 3018480.0, 5448356.0, 0.0], "opt": ["", "", "T", "T", ""]}, {"n": "Yves Missi", "t": "TERRONCINO CAVALIERS", "r": "C", "s": "ATTIVO", "sal": [3353040.0, 3512760.0, 5595827.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Zaccharie Risacher", "t": "DILLY DING DILLY DONG ROYALS", "r": "F", "s": "ATTIVO", "sal": [13197720.0, 13826040.0, 17434637.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Zach Collins", "t": "", "r": "FC", "s": "ATTIVO", "sal": [18080496.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 8292683, 8707317, 0, 0]}, {"n": "Zach Edey", "t": "LOS NAPOLES OUTLAWZ", "r": "C", "s": "ATTIVO", "sal": [6045000.0, 6332760.0, 8067937.0, 0.0, 0.0], "opt": ["", "T", "T", "", ""]}, {"n": "Zach LaVine", "t": "LIMA BEES", "r": "GF", "s": "ATTIVO", "sal": [47499660.0, 48967380.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Zion Williamson", "t": "RUM PROTECTORS", "r": "F", "s": "ATTIVO", "sal": [39446090.0, 42166510.0, 44886930.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Miles Bridges", "t": "CHICAGO HASBULLS", "r": "F", "s": "ATTIVO", "sal": [25000000.0, 22826087.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Sandro Mamukelashvili", "t": "TOPEKA ZERO", "r": "FC", "s": "ATTIVO", "sal": [2461463.0, 2801346.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Jordan Clarkson", "t": "POINT BARROW VVI", "r": "G", "s": "", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Clint Capela", "t": "DILLY DING DILLY DONG ROYALS", "r": "C", "s": "ATTIVO", "sal": [6700000.0, 7035000.0, 7370000.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "CJ McCollum", "t": "", "r": "G", "s": "", "sal": [30666666.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 21000000, 0, 0, 0]}, {"n": "Michael Porter Jr", "t": "CHICAGO HASBULLS", "r": "F", "s": "ATTIVO", "sal": [38333050.0, 40806150.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Johnny Furphy", "t": "GOTHAM CITY KNIGHTS", "r": "GF", "s": "ATTIVO", "sal": [1955377.0, 2296271.0, 2486995.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Donovan Mitchell", "t": "RUM PROTECTORS", "r": "G", "s": "ATTIVO", "sal": [46394100.0, 50105628.0, 53817156.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Bradley Beal", "t": "CASCADIA TRAINBLAZERS", "r": "G", "s": "TAGLIATO", "sal": [5354000.0, 5621700.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Isaiah Hartenstein", "t": "ORGASMO MAGIC", "r": "C", "s": "ATTIVO", "sal": [28500000.0, 28500000.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Justin Edwards", "t": "FRESNO DRUGDEALERS", "r": "GF", "s": "ATTIVO", "sal": [2048494.0, 2411090.0, 2616754.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Neemias Queta", "t": "BETTER CALL PAUL", "r": "C", "s": "ATTIVO", "sal": [2349578.0, 2667944.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "D'Angelo Russell", "t": "DILLY DING DILLY DONG ROYALS", "r": "G", "s": "ATTIVO", "sal": [5685000.0, 5969250.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Jerace Walker", "t": "GOTHAM CITY KNIGHTS", "r": "F", "s": "ATTIVO", "sal": [6665520.0, 8478542.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Caris LeVert", "t": "TERRONCINO CAVALIERS", "r": "GF", "s": "ATTIVO", "sal": [14104000.0, 14809200.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Guerschon Yabusele", "t": "POINT BARROW VVI", "r": "FC", "s": "ATTIVO", "sal": [5500000.0, 5775000.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Jae'sean Tate", "t": "CHICAGO HASBULLS", "r": "GF", "s": "ATTIVO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Isaiah Jackson", "t": "DILLY DING DILLY DONG ROYALS", "r": "C", "s": "ATTIVO", "sal": [7600000.0, 7000000.0, 6400000.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Justin Champagnie", "t": "FACIAL DUNKSHOT", "r": "F", "s": "ATTIVO", "sal": [2349578.0, 2667944.0, 3005085.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Spencer Dinwiddie", "t": "FRESNO DRUGDEALERS", "r": "G", "s": "TAGLIATO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Pascal Siakam", "t": "LAS VENTURAS BANDITS", "r": "F", "s": "ATTIVO", "sal": [45550512.0, 48924624.0, 52298736.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Moussa Diabate", "t": "LIMA BEES", "r": "C", "s": "ATTIVO", "sal": [2270735.0, 2461462.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Drew Eubanks", "t": "BETTER CALL PAUL", "r": "FC", "s": "ATTIVO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jaxson Hayes", "t": "TERRONCINO CAVALIERS", "r": "C", "s": "ATTIVO", "sal": [3449323.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jose Alvarado", "t": "PATATINAIOKOS1969", "r": "G", "s": "ATTIVO", "sal": [4500000.0, 4500000.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Quentin Grimes", "t": "ORGASMO MAGIC", "r": "GF", "s": "ATTIVO", "sal": [8741209.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Matisse Thybulle", "t": "POINT BARROW VVI", "r": "GF", "s": "ATTIVO", "sal": [11550000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Aaron Nesmith", "t": "ORGASMO MAGIC", "r": "F", "s": "ATTIVO", "sal": [11000000.0, 11000000.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 0, 19418000, 20971440, 0]}, {"n": "Larry Nance Jr", "t": "", "r": "FC", "s": "", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Nikola Djurisic", "t": "TOPEKA ZERO", "r": "GF", "s": "TAGLIATO", "sal": [1272870.0, 2150917.0, 2525901.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Bruce Brown Jr", "t": "PATATINAIOKOS1969", "r": "G", "s": "ATTIVO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Josh Okogie", "t": "PATATINAIOKOS1969", "r": "GF", "s": "ATTIVO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Gary Trent Jr", "t": "PATATINAIOKOS1969", "r": "GF", "s": "ATTIVO", "sal": [3697105.0, 3881960.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Taurean Prince", "t": "PATATINAIOKOS1969", "r": "F", "s": "ATTIVO", "sal": [3303774.0, 3815861.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Jalen Pickett", "t": "DILLY DING DILLY DONG ROYALS", "r": "G", "s": "ATTIVO", "sal": [2221677.0, 2406205.0, 2957063.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Jamal Shead", "t": "MILANO PUBLIC ENEMIES", "r": "G", "s": "ATTIVO", "sal": [1955377.0, 2296271.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Andrew Nembhard", "t": "POINT BARROW VVI", "r": "G", "s": "ATTIVO", "sal": [18102000.0, 19550160.0, 20998320.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Russell Westbrook", "t": "FACIAL DUNKSHOT", "r": "G", "s": "ATTIVO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Will Richard", "t": "GOTHAM CITY KNIGHTS", "r": "G", "s": "ATTIVO", "sal": [1272870.0, 2150917.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "", "T", ""]}, {"n": "Ajay Mitchell", "t": "SLAM DRUNK", "r": "GF", "s": "ATTIVO", "sal": [3000000.0, 2850000.0, 2850000.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Tyrese Proctor", "t": "FRESNO DRUGDEALERS", "r": "G", "s": "ATTIVO", "sal": [1272870.0, 2150917.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "", "T", ""]}, {"n": "Ziaire Williams", "t": "LIMA BEES", "r": "F", "s": "ATTIVO", "sal": [6250000.0, 6250000.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Simone Fontecchio", "t": "POINT BARROW VVI", "r": "F", "s": "ATTIVO", "sal": [8307692.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Ryan Rollins", "t": "SLAM DRUNK", "r": "G", "s": "ATTIVO", "sal": [4000000.0, 4000000.0, 4000000.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Collin Gillespie", "t": "BETTER CALL PAUL", "r": "G", "s": "ATTIVO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Josh Minott", "t": "ORGASMO MAGIC", "r": "F", "s": "ATTIVO", "sal": [2378870.0, 2584539.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Brandon Williams", "t": "TOPEKA ZERO", "r": "G", "s": "ATTIVO", "sal": [2270735.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jock Landale", "t": "FACIAL DUNKSHOT", "r": "C", "s": "ATTIVO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "T", ""]}, {"n": "Sion James", "t": "PATATINAIOKOS1969", "r": "F", "s": "ATTIVO", "sal": [2296274.0, 2411090.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Mikal Bridges", "t": "RUM PROTECTORS", "r": "GF", "s": "ATTIVO", "sal": [24900000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""], "pnd": [0, 33482145, 36160714, 38839285, 41517856]}, {"n": "Cam Spencer", "t": "", "r": "G", "s": "", "sal": [2537989.0, 2411090.0, 2616754.0, 2830685.0, 0.0], "opt": ["", "", "", "T", ""]}, {"n": "Gary Payton II", "t": "TOPEKA ZERO", "r": "G", "s": "ATTIVO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Max Christie", "t": "FACIAL DUNKSHOT", "r": "GF", "s": "ATTIVO", "sal": [7714286.0, 8285714.0, 8857143.0, 0.0, 0.0], "opt": ["", "", "P", "", ""]}, {"n": "Saddiq Bey", "t": "SBT BABA GANG", "r": "F", "s": "ATTIVO", "sal": [6118644.0, 6440678.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Noah Clowney", "t": "LAS VENTURAS BANDITS", "r": "FC", "s": "ATTIVO", "sal": [3398640.0, 5414034.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Jordan Walsh", "t": "ORGASMO MAGIC", "r": "GF", "s": "ATTIVO", "sal": [2221677.0, 2406205.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Anthony Black", "t": "FACIAL DUNKSHOT", "r": "G", "s": "ATTIVO", "sal": [7970280.0, 10106316.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Marcus Sasser", "t": "BETTER CALL PAUL", "r": "G", "s": "ATTIVO", "sal": [2886720.0, 5198983.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Nickeil Alexander-Walker", "t": "LIMA BEES", "r": "GF", "s": "ATTIVO", "sal": [15161800.0, 14403710.0, 15161800.0, 15919890.0, 0.0], "opt": ["", "", "", "P", ""]}, {"n": "Kawhi Leonard", "t": "FRESNO DRUGDEALERS", "r": "F", "s": "ATTIVO", "sal": [50000000.0, 50300000.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Precious Achiuwa", "t": "SLAM DRUNK", "r": "FC", "s": "TAGLIATO", "sal": [2111516.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "De-Anthony Melton", "t": "SLAM DRUNK", "r": "GF", "s": "ATTIVO", "sal": [3080921.0, 3451779.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Vince Williams Jr.", "t": "", "r": "GF", "s": "", "sal": [2301587.0, 2489752.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Dru Smith", "t": "CASCADIA TRAINBLAZERS", "r": "G", "s": "ATTIVO", "sal": [2378870.0, 2584539.0, 2934742.0, 0.0, 0.0], "opt": ["", "", "T", "", ""]}, {"n": "Bones Hyland", "t": "CASCADIA TRAINBLAZERS", "r": "G", "s": "ATTIVO", "sal": [2296274.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Coby White taglio", "t": "CASCADIA TRAINBLAZERS", "r": "G", "s": "TAGLIATO", "sal": [12888889.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "Al Horford", "t": "SBT BABA GANG", "r": "FC", "s": "ATTIVO", "sal": [5685000.0, 5969250.0, 0.0, 0.0, 0.0], "opt": ["", "P", "", "", ""]}, {"n": "Jaren Jackson Jr.", "t": "LOS NAPOLES OUTLAWZ", "r": "FC", "s": "ATTIVO", "sal": [35000000.0, 0.0, 0.0, 0.0, 0.0], "opt": ["", "", "", "", ""]}, {"n": "GG Jackson", "t": "LAS VENTURAS BANDITS", "r": "FC", "s": "ATTIVO", "sal": [2221677.0, 2406205.0, 0.0, 0.0, 0.0], "opt": ["", "T", "", "", ""]}, {"n": "Dylan Cardwell", "t": "TOPEKA ZERO", "r": "F", "s": "ATTIVO", "sal": [870000.0, 2150917.0, 2525901.0, 2735698.0, 0.0], "opt": ["", "", "", "T", ""]}]};
+</script>
+<script>
+(function(){
+  const L = window.LEAGUE;
+  const CAP = L.cap;
+  const S = L.seasons;                    // ["2025/26",...]
+  const app = document.getElementById('app');
+
+  /* ---------- helpers ---------- */
+  const fmtM = v => {
+    if(!v) return '<span class="zero">—</span>';
+    return '$' + (v/1e6).toLocaleString('it-IT',{minimumFractionDigits:1, maximumFractionDigits:1}) + 'M';
+  };
+  const fmtFull = v => '$' + Math.round(v).toLocaleString('it-IT');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const slug = s => encodeURIComponent(s);
+  const optBadge = o => o ? `<span class="opt ${esc(o)}" title="${o==='T'?'Team Option':o==='P'?'Player Option':'Not Guaranteed'}">${esc(o)}</span>` : '';
+  const spotrac = n => `<a class="ext" href="https://www.spotrac.com/search?q=${encodeURIComponent(n)}" target="_blank" rel="noopener" title="Vedi ${esc(n)} su Spotrac" aria-label="Vedi ${esc(n)} su Spotrac">&#8599;</a>`;
+  const salCell = (p,i) => {
+    const v = p.sal[i];
+    if(v) return fmtM(v) + optBadge(p.opt[i]);
+    const r = p.pnd && p.pnd[i];
+    if(r) return `<span class="pnd" title="Rinnovo firmato in NBA, non ancora confermato dalla lega">${fmtM(r)}<span class="rbadge">R</span></span>`;
+    return fmtM(0);
+  };
+  const statusOf = p => p.t ? (p.s||'ATTIVO') : 'FREE AGENT';
+  const stClass = s => s==='ATTIVO' ? 'attivo' : s==='TAGLIATO' ? 'tagliato' : 'fa';
+
+  const teamPlayers = name => L.players.filter(p => p.t === name);
+  const capTotals = name => {
+    const tot = [0,0,0,0,0], cut = [0,0,0,0,0], pnd = [0,0,0,0,0];
+    for(const p of teamPlayers(name)){
+      for(let i=0;i<5;i++){
+        tot[i] += p.sal[i];
+        if(p.s === 'TAGLIATO') cut[i] += p.sal[i];
+        if(!p.sal[i] && p.pnd && p.pnd[i]) pnd[i] += p.pnd[i];
+      }
+    }
+    return {tot, cut, pnd};
+  };
+
+  const capBar = used => {
+    const pct = Math.min(used/CAP*100, 100);
+    const over = used > CAP;
+    // when over cap, the tick (cap limit) moves inside and the fill spans full width
+    const tickLeft = over ? (CAP/used*100) : 100;
+    return `<div class="capbar" role="img" aria-label="Cap usato ${Math.round(used/CAP*100)}%">
+      <div class="fill ${over?'over':''}" style="width:${over?100:pct}%"></div>
+      <div class="tick" style="left:${tickLeft}%"></div>
+    </div>`;
+  };
+
+  /* ---------- routing ---------- */
+  function route(){
+    const h = location.hash.replace(/^#\/?/, '') || 'contratti';
+    const [page, arg] = h.split('/');
+    document.querySelectorAll('#nav a').forEach(a =>
+      a.classList.toggle('on', a.dataset.r === (page==='squadra' ? 'squadre' : page)));
+    if(page === 'squadre')      renderTeams();
+    else if(page === 'squadra') renderTeam(decodeURIComponent(arg||''));
+    else if(page === 'recap')   renderRecap();
+    else                        renderContracts();
+    window.scrollTo(0,0);
+  }
+  window.addEventListener('hashchange', route);
+
+  /* ---------- CONTRATTI ---------- */
+  const cState = {q:'', team:'', role:'', st:'', sort:'n', dir:1};
+
+  function renderContracts(){
+    const teams = [...new Set(L.players.map(p=>p.t).filter(Boolean))].sort();
+    const roles = [...new Set(L.players.map(p=>p.r).filter(Boolean))].sort();
+    app.innerHTML = `
+      <div class="eyebrow">Stagione 2025/26 · Salary cap ${fmtFull(CAP)}</div>
+      <h2 class="title">Contratti</h2>
+      <div class="toolbar">
+        <input id="q" type="search" placeholder="Cerca giocatore…" value="${esc(cState.q)}" aria-label="Cerca giocatore">
+        <select id="fteam" aria-label="Filtra per squadra">
+          <option value="">Tutte le squadre</option>
+          <option value="__FA__" ${cState.team==='__FA__'?'selected':''}>Free agent</option>
+          ${teams.map(t=>`<option ${cState.team===t?'selected':''} value="${esc(t)}">${esc(t)}</option>`).join('')}
+        </select>
+        <select id="frole" aria-label="Filtra per ruolo">
+          <option value="">Tutti i ruoli</option>
+          ${roles.map(r=>`<option ${cState.role===r?'selected':''}>${esc(r)}</option>`).join('')}
+        </select>
+        <select id="fst" aria-label="Filtra per stato">
+          <option value="">Tutti gli stati</option>
+          <option ${cState.st==='ATTIVO'?'selected':''}>ATTIVO</option>
+          <option ${cState.st==='TAGLIATO'?'selected':''}>TAGLIATO</option>
+        </select>
+        <span class="count" id="cnt"></span>
+      </div>
+      <div class="tablewrap"><table id="ctab"></table></div>
+      <p class="note">T = Team Option · P = Player Option · NG = Not Guaranteed. L'icona ↗ apre il profilo del giocatore su Spotrac. Gli importi in <span style="color:#E8C55B;font-style:italic">giallo (R)</span> sono rinnovi già firmati in NBA ma non ancora confermati dalla lega: non contano nel cap. Clicca sulle intestazioni per ordinare.</p>`;
+    const inp = document.getElementById('q');
+    inp.addEventListener('input', e=>{cState.q=e.target.value; drawContracts();});
+    document.getElementById('fteam').addEventListener('change', e=>{cState.team=e.target.value; drawContracts();});
+    document.getElementById('frole').addEventListener('change', e=>{cState.role=e.target.value; drawContracts();});
+    document.getElementById('fst').addEventListener('change', e=>{cState.st=e.target.value; drawContracts();});
+    drawContracts();
+  }
+
+  function drawContracts(){
+    const q = cState.q.trim().toLowerCase();
+    let rows = L.players.filter(p =>
+      (!q || p.n.toLowerCase().includes(q)) &&
+      (!cState.team || (cState.team==='__FA__' ? !p.t : p.t===cState.team)) &&
+      (!cState.role || p.r===cState.role) &&
+      (!cState.st || p.s===cState.st)
+    );
+    const k = cState.sort, d = cState.dir;
+    rows.sort((a,b)=>{
+      let va, vb;
+      if(k==='n'||k==='t'||k==='r'||k==='s'){ va=(a[k]||'').toLowerCase(); vb=(b[k]||'').toLowerCase(); return va<vb?-d:va>vb?d:0; }
+      const i = +k; return d*(b.sal[i]-a.sal[i]);
+    });
+    const arrow = key => cState.sort===key ? `<span class="dir">${cState.dir===1?'▾':'▴'}</span>` : '';
+    const th = (key,label,num) => `<th class="${num?'num':''}"><button data-k="${key}">${label} ${arrow(key)}</button></th>`;
+    document.getElementById('cnt').textContent = rows.length + ' giocatori';
+    document.getElementById('ctab').innerHTML = `
+      <thead><tr>
+        ${th('n','Giocatore')}${th('t','FantaTeam')}${th('r','Ruolo')}${th('s','Stato')}
+        ${S.map((s,i)=>th(String(i), s, true)).join('')}
+      </tr></thead>
+      <tbody>${rows.map(p=>`
+        <tr>
+          <td class="pname">${esc(p.n)} ${spotrac(p.n)}</td>
+          <td class="dim">${p.t?`<a href="#/squadra/${slug(p.t)}">${esc(p.t)}</a>`:'<span class="st fa">FREE AGENT</span>'}</td>
+          <td><span class="role">${esc(p.r||'—')}</span></td>
+          <td><span class="st ${stClass(statusOf(p))}">${esc(p.t?(p.s||''):'')}</span></td>
+          ${p.sal.map((v,i)=>`<td class="num">${salCell(p,i)}</td>`).join('')}
+        </tr>`).join('')}
+      </tbody>`;
+    document.querySelectorAll('#ctab thead button').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const k=b.dataset.k;
+        if(cState.sort===k) cState.dir*=-1; else {cState.sort=k; cState.dir=1;}
+        drawContracts();
+      });
+    });
+  }
+
+  /* ---------- SQUADRE ---------- */
+  function renderTeams(){
+    const cards = L.teams.map(t=>{
+      const {tot} = capTotals(t.name);
+      const used = tot[0], space = CAP-used;
+      const n = teamPlayers(t.name).filter(p=>p.s!=='TAGLIATO').length;
+      return `<a class="card" href="#/squadra/${slug(t.name)}">
+        <div class="tname">${esc(t.name)}</div>
+        <div class="meta">GM ${esc(t.gm||'—')}${t.city?` · ${esc(t.city)}`:''}<br>${n} giocatori attivi</div>
+        ${capBar(used)}
+        <div class="capline"><span>Cap 25/26</span>
+          <b class="${space<0?'over':'ok'}">${space<0?'-':''}${fmtM(Math.abs(space)).replace(/<[^>]*>/g,'')||'$0M'} ${space<0?'over':'liberi'}</b>
+        </div>
+      </a>`;
+    }).join('');
+    app.innerHTML = `
+      <div class="eyebrow">${L.teams.length} franchigie · Cap ${fmtFull(CAP)}</div>
+      <h2 class="title">Squadre</h2>
+      <div class="grid">${cards}</div>`;
+  }
+
+  /* ---------- SQUADRA ---------- */
+  function renderTeam(name){
+    const t = L.teams.find(x=>x.name===name);
+    if(!t){ app.innerHTML = `<div class="empty">Squadra non trovata. <a href="#/squadre" style="color:var(--ball)">Torna alle squadre</a></div>`; return; }
+    const roster = teamPlayers(name);
+    const attivi = roster.filter(p=>p.s!=='TAGLIATO').sort((a,b)=>b.sal[0]-a.sal[0]);
+    const tagliati = roster.filter(p=>p.s==='TAGLIATO').sort((a,b)=>b.sal[0]-a.sal[0]);
+    const {tot, cut, pnd} = capTotals(name);
+
+    const rowsHtml = list => list.map(p=>`
+      <tr>
+        <td class="pname">${esc(p.n)} ${spotrac(p.n)}</td>
+        <td><span class="role">${esc(p.r||'—')}</span></td>
+        ${p.sal.map((v,i)=>`<td class="num">${salCell(p,i)}</td>`).join('')}
+      </tr>`).join('');
+
+    const table = (list, foot) => `
+      <div class="tablewrap"><table>
+        <thead><tr><th>Giocatore</th><th>Ruolo</th>${S.map(s=>`<th class="num">${s}</th>`).join('')}</tr></thead>
+        <tbody>${rowsHtml(list) || `<tr><td colspan="7" class="dim">Nessun giocatore</td></tr>`}</tbody>
+        ${foot||''}
+      </table></div>`;
+
+    const foot = `<tfoot><tr><td colspan="2">Totale cap</td>${tot.map(v=>`<td class="num">${fmtM(v)}</td>`).join('')}</tr></tfoot>`;
+
+    app.innerHTML = `
+      <a class="back" href="#/squadre">← Tutte le squadre</a>
+      <div class="eyebrow">${esc(t.city||'')}</div>
+      <h2 class="title">${esc(t.name)}</h2>
+      <div class="facts">
+        <div class="fact"><div class="k">General Manager</div><div class="v">${esc(t.gm||'—')}</div></div>
+        <div class="fact"><div class="k">Uomo franchigia</div><div class="v">${esc(t.franchise||'—')}</div></div>
+        ${t.nomina?`<div class="fact"><div class="k">Nomina</div><div class="v">${esc(t.nomina)} → ${esc(t.scadenza||'?')}</div></div>`:''}
+        <div class="fact"><div class="k">Roster attivo</div><div class="v">${attivi.length} giocatori</div></div>
+      </div>
+
+      <div class="capgrid">
+        ${S.map((s,i)=>{
+          const space = CAP - tot[i];
+          return `<div class="capcell">
+            <div class="season">${s}</div>
+            ${capBar(tot[i])}
+            <div class="big" style="color:${space<0?'var(--loss)':'var(--win)'}">${space<0?'−':''}${fmtM(Math.abs(space)).replace(/<[^>]*>/g,'')||'$0M'}</div>
+            <div class="sub">usati <b>${(tot[i]/1e6).toFixed(1)}M</b>${cut[i]?` · dead money <b style="color:var(--loss)">${(cut[i]/1e6).toFixed(1)}M</b>`:''}${pnd[i]?` · rinnovi da confermare <b style="color:#E8C55B">+${(pnd[i]/1e6).toFixed(1)}M</b>`:''}</div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <div class="sec">Roster attivo</div>
+      ${table(attivi, foot)}
+      ${tagliati.length?`<div class="sec">Tagliati (dead money)</div>${table(tagliati)}`:''}
+    `;
+  }
+
+  /* ---------- RECAP ---------- */
+  function renderRecap(){
+    const data = L.teams.map(t=>({t, ...capTotals(t.name)}))
+      .sort((a,b)=>(CAP-b.tot[0])-(CAP-a.tot[0]));
+    app.innerHTML = `
+      <div class="eyebrow">Spazio salariale per stagione · Cap ${fmtFull(CAP)}</div>
+      <h2 class="title">Recap lega</h2>
+      <div class="tablewrap"><table style="min-width:900px">
+        <thead><tr><th>Squadra</th>${S.map(s=>`<th class="num">${s}</th>`).join('')}<th style="width:26%">Cap 25/26</th></tr></thead>
+        <tbody>
+          ${data.map(({t,tot})=>`
+            <tr>
+              <td class="pname"><a href="#/squadra/${slug(t.name)}">${esc(t.name)}</a></td>
+              ${tot.map(v=>{
+                const sp = CAP - v;
+                return `<td class="num" style="color:${sp<0?'var(--loss)':sp>0?'var(--win)':'var(--muted)'}">${sp<0?'−':''}${(Math.abs(sp)/1e6).toFixed(1)}M</td>`;
+              }).join('')}
+              <td>${capBar(tot[0])}</td>
+            </tr>`).join('')}
+        </tbody>
+        <tfoot><tr><td>Totale lega (usato)</td>
+          ${S.map((_,i)=>`<td class="num">${(data.reduce((a,d)=>a+d.tot[i],0)/1e6).toFixed(0)}M</td>`).join('')}
+          <td></td></tr></tfoot>
+      </table></div>
+      <div class="legend">
+        <span><i style="background:var(--win)"></i>Spazio libero sotto il cap</span>
+        <span><i style="background:var(--loss)"></i>Over the cap</span>
+        <span><i style="background:var(--ball)"></i>Barra = cap usato (la tacca bianca è il limite)</span>
+      </div>`;
+  }
+
+  route();
+})();
+</script>
+</body>
+</html>
