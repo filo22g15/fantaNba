@@ -29,8 +29,8 @@ Chiunque apra il sito vede tre sezioni (menu in alto):
 - **Giocatori tagliati:** restano a bilancio ma pesano sul cap per **metà** del loro
   contratto (dead money). Finiscono nella sezione *Tagliati* della pagina squadra.
 - **Rinnovi da confermare (R gialla):** importi già firmati in NBA ma non ancora ratificati
-  dalla lega. Sono mostrati in giallo con una **R** e **non contano** nel cap finché l'Admin
-  non li converte in contratto effettivo (vedi *Confermare un rinnovo* sotto).
+  dalla lega. Sono mostrati in giallo con una **R** e **non contano** nel cap finché non
+  vengono confermati (basta impostare lo stipendio di quella stagione, vedi sotto).
 
 ---
 
@@ -50,7 +50,6 @@ Uscendo dalla modalità Admin (riclic su ● Admin) le modifiche non pubblicate 
 |---|---|---|
 | **Spostare un giocatore** | Contratti | La colonna *FantaTeam* diventa un menu: scegli la nuova squadra (o "svincolato"). |
 | **Modificare lo stipendio** | Contratti | Icona **✎** sul giocatore → le 5 celle stagione diventano modificabili → **✓** per chiudere. |
-| **Confermare un rinnovo** | Contratti | Sui giocatori con la **R** gialla compare il pulsante **✓R**: un clic rende effettivi gli importi in giallo (entrano nel cap, la R sparisce). |
 | **Tagliare / reintegrare** | pagina Squadra | Pulsante **Taglia** (rosso) sugli attivi, **Reintegra** (verde) sui tagliati. |
 | **Gestire le scelte** | pagina Squadra, *Scelte al draft* | **↔** sposta una pick a un'altra squadra, **✕** la rimuove, **+ Aggiungi scelta** ne crea una nuova. |
 | **Scambi (Trade)** | pagina **Trade** | Vedi sotto. |
