@@ -12,7 +12,9 @@ from openpyxl import load_workbook
 
 XLSX = sys.argv[1] if len(sys.argv) > 1 else "FantaNBA.xlsx"
 SEASONS = ["2025/26", "2026/27", "2027/28", "2028/29", "2029/30"]
-CAP = 215_000_000
+# salary cap per stagione (2025/26 ... 2029/30)
+CAPS = [215_000_000, 230_000_000, 230_000_000, 230_000_000, 230_000_000]
+CAP = CAPS[0]
 NON_TEAM_SHEETS = {"Contratti", "Recap", "Bacheca", "Foglio10"}
 ANNO_MIN_PICK = 2026   # pick mostrate dal draft di quest'anno in poi
 RE_PICK = re.compile(r"scelta\s*(\d+)\s*°?\s*giro\s+(.+?)\s+((?:19|20)\d{2})", re.I)
@@ -87,6 +89,7 @@ for sn in wb.sheetnames:
 data = {
     "league": "FantaHezonja Champions",
     "cap": CAP,
+    "caps": CAPS,
     "seasons": SEASONS,
     "teams": teams,
     "players": players,
