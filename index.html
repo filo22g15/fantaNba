@@ -188,6 +188,12 @@
   button.rinnova:hover{background:rgba(232,197,91,.16)}
 
   /* ---------- recap ---------- */
+  .seasonadmin{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:2px 0 16px;
+    padding:12px 14px; border:1px dashed rgba(228,87,79,.5); border-radius:10px; background:rgba(228,87,79,.06)}
+  .seasonadmin .note{margin:0}
+  button.avanza{font-family:'Barlow Condensed'; font-weight:700; font-size:14px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--loss); border:1px solid rgba(228,87,79,.6); border-radius:8px; padding:8px 16px; white-space:nowrap}
+  button.avanza:hover{background:rgba(228,87,79,.16)}
   .legend{display:flex; gap:16px; flex-wrap:wrap; color:var(--muted); font-size:13px; margin:10px 2px 0}
   .legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; vertical-align:-1px}
 
@@ -309,8 +315,8 @@ window.LEAGUE = {"league": "FantaHezonja Champions", "cap":215000000, "seasons":
 (function(){
   const L = window.LEAGUE;
   const S = L.seasons;                    // ["2025/26",...]
-  const CAPS = (L.caps && L.caps.length) ? L.caps : S.map(() => L.cap || 0);  // cap per stagione
-  const CAP = CAPS[0];                    // cap della stagione corrente (2025/26)
+  const CAPS = L.caps = (L.caps && L.caps.length) ? L.caps : S.map(() => L.cap || 0);  // cap per stagione
+  let CAP = CAPS[0];                       // cap della stagione corrente (aggiornato da "Avanza stagione")
   const app = document.getElementById('app');
   L.players.forEach((p,i)=>{ p.__i = i; });   // indice stabile per l'admin
 
@@ -414,7 +420,7 @@ window.LEAGUE = {"league": "FantaHezonja Champions", "cap":215000000, "seasons":
     const teams = [...new Set(L.players.map(p=>p.t).filter(Boolean))].sort();
     const roles = [...new Set(L.players.map(p=>p.r).filter(Boolean))].sort();
     app.innerHTML = `
-      <div class="eyebrow">Stagione 2025/26 · Salary cap ${fmtFull(CAP)}</div>
+      <div class="eyebrow">Stagione ${esc(S[0])} · Salary cap ${fmtFull(CAP)}</div>
       <h2 class="title">Contratti</h2>
       <div class="toolbar">
         <input id="q" type="search" placeholder="Cerca giocatore…" value="${esc(cState.q)}" aria-label="Cerca giocatore">
@@ -738,8 +744,12 @@ window.LEAGUE = {"league": "FantaHezonja Champions", "cap":215000000, "seasons":
     app.innerHTML = `
       <div class="eyebrow">Spazio salariale per stagione · Cap ${capRange}</div>
       <h2 class="title">Recap lega</h2>
+      ${ADMIN.on ? `<div class="seasonadmin">
+        <button id="avanzaStagione" class="avanza" type="button">⏭ Avanza stagione</button>
+        <span class="note">Passa alla stagione successiva: rimuove <b>${esc(S[0])}</b> dalla finestra dei contratti, fa scorrere gli stipendi di un anno, elimina le scelte del draft ${parseInt(S[0],10)+1} e assegna a ogni squadra le sue 3 pick del nuovo draft. Lo storico (Bacheca) resta.</span>
+      </div>` : ''}
       <div class="tablewrap"><table style="min-width:900px">
-        <thead><tr><th>Squadra</th>${S.map(s=>`<th class="num">${s}</th>`).join('')}<th style="width:26%">Cap 25/26</th></tr></thead>
+        <thead><tr><th>Squadra</th>${S.map(s=>`<th class="num">${s}</th>`).join('')}<th style="width:26%">Cap ${esc(S[0])}</th></tr></thead>
         <tbody>
           ${data.map(({t,tot})=>`
             <tr>
@@ -760,6 +770,10 @@ window.LEAGUE = {"league": "FantaHezonja Champions", "cap":215000000, "seasons":
         <span><i style="background:var(--loss)"></i>Over the cap</span>
         <span><i style="background:var(--ball)"></i>Barra = cap usato (la tacca bianca è il limite)</span>
       </div>`;
+    if(ADMIN.on){
+      const av = document.getElementById('avanzaStagione');
+      if(av) av.addEventListener('click', adminAvanzaStagione);
+    }
   }
 
   /* ---------- BACHECA (albo d'oro, premi, record) ---------- */
@@ -1074,7 +1088,8 @@ window.LEAGUE = {"league": "FantaHezonja Champions", "cap":215000000, "seasons":
     repo: 'filo22g15/fantaNba',   // owner/repo su GitHub
     branch: 'main',               // ramo pubblicato da GitHub Pages
     tokenKey: 'fnba_gh_token',
-    on: false, token: null, dirty: false, changes: [], orig: [], origPicks: {}, origStatus: [], origSal: [], origPnd: [], origDead: [], origBacheca: null,
+    on: false, token: null, dirty: false, changes: [], orig: [], origPicks: {}, origStatus: [], origSal: [], origOpt: [], origPnd: [], origDead: [], origBacheca: null,
+    origSeasons: null, origCaps: null,
   };
   const snapDead = () => L.players.map(p => p.dead ? JSON.parse(JSON.stringify(p.dead)) : null);
 
@@ -1082,19 +1097,40 @@ window.LEAGUE = {"league": "FantaHezonja Champions", "cap":215000000, "seasons":
   const snapPicks = () => { const m = {}; L.teams.forEach(t => { m[t.name] = JSON.parse(JSON.stringify(t.picks || [])); }); return m; };
   const restorePicks = () => { L.teams.forEach(t => { t.picks = JSON.parse(JSON.stringify(ADMIN.origPicks[t.name] || [])); }); };
 
+  // fotografa lo stato iniziale (base per "modifiche da pubblicare" e per Annulla)
+  function snapshotOrig(){
+    ADMIN.orig = L.players.map(p => p.t || '');
+    ADMIN.origStatus = L.players.map(p => p.s || '');
+    ADMIN.origSal = L.players.map(p => (p.sal || []).slice());
+    ADMIN.origOpt = L.players.map(p => (p.opt || []).slice());
+    ADMIN.origPnd = L.players.map(p => p.pnd ? p.pnd.slice() : null);
+    ADMIN.origDead = snapDead();
+    ADMIN.origBacheca = snapBacheca();
+    ADMIN.origPicks = snapPicks();
+    ADMIN.origSeasons = S.slice();
+    ADMIN.origCaps = CAPS.slice();
+  }
+  // riporta la finestra delle 5 stagioni (etichette, cap, opzioni) allo stato iniziale
+  function restoreSeasonWindow(){
+    if(ADMIN.origSeasons){ L.seasons.length = 0; ADMIN.origSeasons.forEach(s => L.seasons.push(s)); }
+    if(ADMIN.origCaps){ CAPS.length = 0; ADMIN.origCaps.forEach(c => CAPS.push(c)); }
+    CAP = CAPS[0];
+    L.players.forEach(p => { const o = ADMIN.origOpt[p.__i]; if(o) p.opt = o.slice(); });
+  }
+
+  // etichetta della stagione successiva: "2029/30" -> "2030/31"
+  function nextSeasonLabel(last){
+    const y = parseInt(String(last).slice(0, 4), 10) + 1;
+    return y + '/' + String((y + 1) % 100).padStart(2, '0');
+  }
+
   const ghHeaders = t => ({ Authorization: 'Bearer ' + (t || ADMIN.token), Accept: 'application/vnd.github+json' });
   const apiUrl = path => `https://api.github.com/repos/${ADMIN.repo}/contents/${path}`;
   const b64enc = str => btoa(unescape(encodeURIComponent(str)));
   const b64dec = b64 => decodeURIComponent(escape(atob(String(b64).replace(/\s/g, ''))));
 
   function adminInit(){
-    ADMIN.orig = L.players.map(p => p.t || '');
-    ADMIN.origStatus = L.players.map(p => p.s || '');
-    ADMIN.origSal = L.players.map(p => (p.sal || []).slice());
-    ADMIN.origPnd = L.players.map(p => p.pnd ? p.pnd.slice() : null);
-    ADMIN.origDead = snapDead();
-    ADMIN.origBacheca = snapBacheca();
-    ADMIN.origPicks = snapPicks();
+    snapshotOrig();
     ADMIN.token = localStorage.getItem(ADMIN.tokenKey);
     ADMIN.on = !!ADMIN.token;
 
@@ -1144,7 +1180,7 @@ window.LEAGUE = {"league": "FantaHezonja Champions", "cap":215000000, "seasons":
     ADMIN.token = null; ADMIN.on = false;
     L.players.forEach(p => { p.t = ADMIN.orig[p.__i]; p.s = ADMIN.origStatus[p.__i]; p.sal = ADMIN.origSal[p.__i].slice(); restorePnd(p); restoreDead(p); });   // scarta modifiche non pubblicate
     if(ADMIN.origBacheca) loadBacheca(JSON.parse(ADMIN.origBacheca));
-    restorePicks();
+    restorePicks(); restoreSeasonWindow();
     ADMIN.changes = []; ADMIN.dirty = false;
     renderAdminBtn(); updatePublishBar(); route();
   }
@@ -1222,8 +1258,55 @@ window.LEAGUE = {"league": "FantaHezonja Champions", "cap":215000000, "seasons":
   function adminDiscard(){
     L.players.forEach(p => { p.t = ADMIN.orig[p.__i]; p.s = ADMIN.origStatus[p.__i]; p.sal = ADMIN.origSal[p.__i].slice(); restorePnd(p); restoreDead(p); });
     if(ADMIN.origBacheca) loadBacheca(JSON.parse(ADMIN.origBacheca));
-    restorePicks();
+    restorePicks(); restoreSeasonWindow();
     recomputeDirty(); route();
+  }
+
+  // ---- Avanza stagione: fa scorrere di un anno la finestra delle 5 stagioni ----
+  // Rimuove la stagione più vecchia (S[0]) da contratti/cap/opzioni/penali, aggiunge
+  // una nuova stagione vuota in coda e cancella le scelte del draft dell'anno concluso.
+  // Lo storico (Bacheca / albo d'oro) NON viene toccato. Pubblica subito.
+  async function adminAvanzaStagione(){
+    if(!ADMIN.on) return;
+    if(ADMIN.dirty){ alert('Hai modifiche non pubblicate: pubblicale o annullale prima di avanzare la stagione.'); return; }
+    const rimossa = S[0];
+    const dropYear = parseInt(String(rimossa).slice(0, 4), 10) + 1;   // draft dell'anno appena concluso
+    const nuova = nextSeasonLabel(S[S.length - 1]);
+    let maxY = 0;
+    L.teams.forEach(t => (t.picks || []).forEach(pk => { if(pk.y > maxY) maxY = pk.y; }));
+    const nuovoDraft = maxY ? maxY + 1 : dropYear + 3;   // nuovo anno di draft in coda all'orizzonte
+    const ok = confirm(
+      `Avanzare la lega alla stagione successiva?\n\n` +
+      `• La stagione ${rimossa} viene rimossa dalla finestra dei contratti\n` +
+      `• Tutti gli stipendi e le opzioni scorrono di un anno\n` +
+      `• Nuova stagione vuota in coda: ${nuova}\n` +
+      `• Le scelte del draft ${dropYear} vengono eliminate\n` +
+      `• Ogni squadra riceve le sue 3 pick del draft ${nuovoDraft} (1°, 2°, 3° giro)\n\n` +
+      `Lo storico (Bacheca / albo d'oro) NON viene toccato.\n` +
+      `Dopo l'OK la modifica viene pubblicata subito online.`);
+    if(!ok) return;
+
+    // scorri la finestra: togli l'elemento [0], aggiungi la nuova stagione in coda
+    S.shift();    S.push(nuova);
+    CAPS.shift(); CAPS.push(CAPS[CAPS.length - 1]);   // il nuovo cap ripete l'ultimo (230M)
+    CAP = CAPS[0];
+    if('cap' in L) L.cap = CAP;   // campo legacy: tienilo coerente col cap corrente
+    L.players.forEach(p => {
+      (p.sal = p.sal || [0,0,0,0,0]).shift(); p.sal.push(0);
+      (p.opt = p.opt || ['','','','','']).shift(); p.opt.push('');
+      if(p.pnd){ p.pnd.shift(); p.pnd.push(0); if(p.pnd.every(v => !v)) delete p.pnd; }
+      if(p.dead && p.dead.sal){ p.dead.sal.shift(); p.dead.sal.push(0); if(p.dead.sal.every(v => !v)) delete p.dead; }
+    });
+    // via le scelte del draft già avvenuto e aggiungi il nuovo anno di draft in fondo all'orizzonte
+    L.teams.forEach(t => {
+      t.picks = (Array.isArray(t.picks) ? t.picks : []).filter(pk => pk.y !== dropYear);
+      for(let rd = 1; rd <= 3; rd++) t.picks.push({ y: nuovoDraft, rd, from: t.name });   // 3 pick proprie: 1°, 2°, 3° giro
+    });
+
+    ADMIN.changes = [`⏭ Avanzata stagione → ${S[0]} (rimossa ${rimossa}, tolte pick draft ${dropYear}, aggiunte pick draft ${nuovoDraft})`];
+    ADMIN.dirty = true; updatePublishBar();
+    await adminPublish();   // pubblica subito; on success rifà lo snapshot base
+    route();
   }
 
   function restorePnd(p){
@@ -1269,13 +1352,7 @@ window.LEAGUE = {"league": "FantaHezonja Champions", "cap":215000000, "seasons":
       try{ const g = await ghGet('bacheca.js'); shaB = g && g.sha; }catch(e){ /* magari non esiste ancora */ }
       await ghPut('bacheca.js', bachPayload, shaB, msg);
 
-      ADMIN.orig = L.players.map(p => p.t || '');   // nuova base di partenza
-      ADMIN.origStatus = L.players.map(p => p.s || '');
-      ADMIN.origSal = L.players.map(p => (p.sal || []).slice());
-      ADMIN.origPnd = L.players.map(p => p.pnd ? p.pnd.slice() : null);
-      ADMIN.origDead = snapDead();
-      ADMIN.origBacheca = snapBacheca();
-      ADMIN.origPicks = snapPicks();
+      snapshotOrig();   // nuova base di partenza
       ADMIN.changes = []; ADMIN.dirty = false;
       updatePublishBar();
       alert('Pubblicato! GitHub Pages aggiorna il sito entro ~1 minuto.');

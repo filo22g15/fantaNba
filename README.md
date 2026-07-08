@@ -65,7 +65,32 @@ Uscendo dalla modalità Admin (riclic su ● Admin) le modifiche non pubblicate 
 | **Azzerare una penale** | pagina Squadra | Nella sezione *Penali da tagli*, il pulsante **✕** rimuove la penale (es. quando il contratto residuo scade). |
 | **Gestire le scelte** | pagina Squadra, *Scelte al draft* | **↔** sposta una pick a un'altra squadra, **✕** la rimuove, **+ Aggiungi scelta** ne crea una nuova. |
 | **Aggiornare la Bacheca** | pagina **Bacheca** | In Admin la pagina diventa un editor: campi per campione/premi/conference/division/record/maglie. **+ Aggiungi riga** e **✕** per righe. Il medagliere si ricalcola da solo. Poi **Pubblica**. |
+| **Avanzare la stagione** | pagina **Recap** | Pulsante **⏭ Avanza stagione**. Vedi sotto. |
 | **Scambi (Trade)** | pagina **Trade** | Vedi sotto. |
+
+### Avanzare di un anno (fine stagione)
+
+Quando una stagione è finita e vuoi passare a quella successiva (es. da **2025/26** a
+**2026/27**), da Admin apri la pagina **Recap** e premi **⏭ Avanza stagione**. L'operazione
+fa **scorrere di un anno la finestra delle 5 stagioni**:
+
+- la stagione più vecchia (2025/26) **esce** dai contratti, dal cap e dalle opzioni;
+- tutti gli stipendi, le opzioni e le penali (*dead money*) **scalano di una posizione**;
+- viene aggiunta in coda una **nuova stagione vuota** (es. 2030/31), con cap uguale all'ultimo;
+- le **scelte del draft dell'anno appena concluso** (es. 2026) vengono **eliminate**;
+- ogni squadra riceve le sue **3 nuove scelte** del draft che entra nell'orizzonte (es. 2029),
+  una per giro (1°, 2°, 3°), intestate alla squadra stessa (poi le puoi scambiare/rinominare);
+- le penali e i rinnovi che così si azzerano **scompaiono** da soli.
+
+Lo **storico non si tocca**: la Bacheca (albo d'oro, premi, record) resta com'è. Il campione
+della stagione conclusa va *aggiunto* all'albo d'oro, non è parte di questa operazione.
+
+Serve prima **pubblicare o annullare** eventuali modifiche in sospeso; poi al click compare una
+richiesta di conferma e, all'OK, la modifica **viene pubblicata subito** online. Finché non
+confermi (o se la pubblicazione fallisce) puoi sempre premere **Annulla** per tornare indietro.
+
+> L'Excel `FantaNBA.xlsx` **non** viene aggiornato: questa operazione riguarda solo il sito.
+> In alternativa allo stesso risultato c'è lo script `avanza_stagione.py` (vedi sotto).
 
 ### Registrare un taglio + rifirma
 
@@ -223,6 +248,19 @@ Dopo averlo aggiunto, dal sito (Admin) lo cerchi in *Contratti* (filtro **Free a
 assegni a una squadra con il menu FantaTeam, eventualmente correggi lo stipendio con **✎**, e
 premi **Pubblica**.
 
+### Avanzare di un anno da terminale — `avanza_stagione.py`
+Fa la stessa cosa del pulsante **⏭ Avanza stagione** (vedi *Modalità Admin*), ma da terminale:
+fa scorrere di un anno la finestra delle 5 stagioni, elimina le scelte del draft dell'anno
+appena concluso, assegna a ogni squadra le 3 pick del nuovo draft e aggiorna **solo**
+`index.html` e `data.js` (con backup `.bak`). Non tocca né la Bacheca né l'Excel.
+
+```
+python avanza_stagione.py --dry-run   # mostra cosa farebbe, senza scrivere
+python avanza_stagione.py             # esegue
+```
+
+Dopo, `git commit` + `git push` per pubblicare.
+
 ---
 
 ## File del progetto
@@ -235,6 +273,7 @@ premi **Pubblica**.
 | `aggiorna_dati.py` | Script: rigenera i dati dall'Excel (`FantaNBA.xlsx`). |
 | `aggiorna_bacheca.py` | Script: rigenera la pagina Bacheca dai tre Excel. |
 | `aggiungi_giocatore.py` | Script: aggiunge un nuovo giocatore free agent. |
+| `avanza_stagione.py` | Script: fa scorrere di un anno la finestra delle stagioni (solo sito). |
 | `bacheca.js` | Copia dei dati della Bacheca (rigenerata da `aggiorna_bacheca.py`). |
 | `FantaNBA.xlsx` | Excel "maestro": foglio *Contratti* + un foglio per squadra + *Bacheca*. |
 | `ALBO D'ORO & PREMI INDIVIDUALI - FantaNBA Hezonja.xlsx` | Excel: albo d'oro e premi individuali. |
