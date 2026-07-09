@@ -140,6 +140,21 @@ export default function ContrattiPage() {
     }
   };
 
+  // Inserisce/modifica MANUALMENTE il link Spotrac (utile quando l'anti-bot blocca la risoluzione auto).
+  const linkManual = (i: number) => {
+    const p = league.players[i];
+    const raw = (prompt(`Link Spotrac di ${p.n}\n(es. https://www.spotrac.com/nba/player/_/id/98599/ace-bailey)`, p.spotrac || 'https://www.spotrac.com/nba/player/_/id/') || '').trim();
+    if (!raw) return;
+    if (!/^https?:\/\/(www\.)?spotrac\.com\/.+/i.test(raw)) {
+      alert('Link non valido: deve iniziare con https://www.spotrac.com/');
+      return;
+    }
+    const url = raw.split('?')[0]; // via eventuali query string
+    updateLeague((d: League) => {
+      d.players[i].spotrac = url;
+    });
+  };
+
   // Aggiorna ruolo + contratto da Spotrac/sports.ws (NON tocca il link: quello ha il suo bottone).
   const syncContract = async (i: number) => {
     const p = league.players[i];
@@ -358,6 +373,14 @@ export default function ContrattiPage() {
                           title="Aggiorna SOLO il link diretto a Spotrac"
                         >
                           {syncing === i ? '…' : '🔗'}
+                        </button>
+                        <button
+                          className="saltoggle"
+                          type="button"
+                          onClick={() => linkManual(i)}
+                          title="Inserisci/modifica il link Spotrac a mano"
+                        >
+                          ✏️
                         </button>
                         <button
                           className="saltoggle"
