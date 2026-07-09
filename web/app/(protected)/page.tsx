@@ -106,7 +106,41 @@ export default function ContrattiPage() {
       p.dead.sal[s] = value;
       if (!p.dead.t && !p.dead.sal.some((v) => v)) delete p.dead;
     });
-  const syncFromSpotrac = async (i: number) => {
+  // Aggiorna SOLO il link diretto a Spotrac (non tocca contratto/ruolo).
+  const syncLink = async (i: number) => {
+    const p = league.players[i];
+    setSyncing(i);
+    try {
+      const r = await fetch('/api/sync-player', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: p.n, linkOnly: true }),
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        alert(data.error || 'Errore nel recupero del link.');
+        return;
+      }
+      if (!data.spotracUrl) {
+        alert(`Profilo Spotrac non trovato per ${p.n}.`);
+        return;
+      }
+      if (data.spotracUrl === p.spotrac) {
+        alert(`${p.n}: il link è già quello diretto.`);
+        return;
+      }
+      updateLeague((d: League) => {
+        d.players[i].spotrac = data.spotracUrl;
+      });
+    } catch {
+      alert('Errore di rete durante il recupero del link.');
+    } finally {
+      setSyncing(null);
+    }
+  };
+
+  // Aggiorna ruolo + contratto da Spotrac/sports.ws (NON tocca il link: quello ha il suo bottone).
+  const syncContract = async (i: number) => {
     const p = league.players[i];
     setSyncing(i);
     try {
@@ -120,20 +154,16 @@ export default function ContrattiPage() {
         alert(data.error || 'Errore nella sincronizzazione.');
         return;
       }
-      if (!data.found) {
-        alert(`Nessun dato trovato per ${p.n} su Spotrac/sports.ws.`);
-        return;
-      }
       const changes: string[] = [];
       if (data.role && data.role !== p.r) changes.push(`ruolo ${p.r || '?'} → ${data.role}`);
       (data.sal as (number | null)[]).forEach((v, idx) => {
         if (v != null && v !== p.sal[idx]) changes.push(`${S[idx]}: ${(v / 1e6).toFixed(1)}M`);
       });
       if (!changes.length) {
-        alert(`${p.n}: già allineato a Spotrac/sports.ws.`);
+        alert(`${p.n}: ruolo e contratto già allineati a Spotrac/sports.ws.`);
         return;
       }
-      if (!confirm(`Aggiornare ${p.n} da Spotrac/sports.ws?\n\n${changes.join('\n')}`)) return;
+      if (!confirm(`Aggiornare RUOLO e CONTRATTO di ${p.n}?\n\n${changes.join('\n')}`)) return;
       updateLeague((d: League) => {
         const pp = d.players[i];
         if (data.role) pp.r = data.role;
@@ -266,7 +296,7 @@ export default function ContrattiPage() {
                       <span className="role">{p.r || '—'}</span>
                     </td>
                     <td className="pname cardtitle" data-label="Giocatore">
-                      {p.n} <Spotrac n={p.n} />
+                      {p.n} <Spotrac n={p.n} url={p.spotrac} />
                       {p.dead && p.dead.t && (
                         <Link
                           className="deadtag"
@@ -323,8 +353,17 @@ export default function ContrattiPage() {
                           className="saltoggle"
                           type="button"
                           disabled={syncing === i}
-                          onClick={() => syncFromSpotrac(i)}
-                          title="Aggiorna ruolo e contratto da Spotrac / sports.ws"
+                          onClick={() => syncLink(i)}
+                          title="Aggiorna SOLO il link diretto a Spotrac"
+                        >
+                          {syncing === i ? '…' : '🔗'}
+                        </button>
+                        <button
+                          className="saltoggle"
+                          type="button"
+                          disabled={syncing === i}
+                          onClick={() => syncContract(i)}
+                          title="Aggiorna ruolo e contratto da Spotrac/sports.ws"
                         >
                           {syncing === i ? '…' : '🔄'}
                         </button>

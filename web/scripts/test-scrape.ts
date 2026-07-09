@@ -8,5 +8,6 @@ syncPlayer(name, seasons).then((res) => {
   console.log('Giocatore:', name);
   console.log('Ruolo:', res.role);
   console.log('Contratto per stagione:', res.sal);
+  console.log('URL profilo:', res.spotracUrl);
   console.log('Trovato qualcosa:', res.found);
 });

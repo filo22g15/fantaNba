@@ -52,7 +52,7 @@ async function ruoloSportsws(nome: string): Promise<string | null> {
   return null;
 }
 
-async function urlSpotrac(nome: string): Promise<string | null> {
+export async function urlSpotrac(nome: string): Promise<string | null> {
   try {
     const r = await richiesta(`https://www.spotrac.com/search?q=${encodeURIComponent(pulisci(nome))}`);
     if (r.status !== 200) return null;
@@ -76,10 +76,8 @@ async function urlSpotrac(nome: string): Promise<string | null> {
   }
 }
 
-// Ritorna { stagione(Spotrac): cap_hit } per le stagioni richieste.
-async function caphitSpotrac(nome: string, stagioni: string[]): Promise<Record<string, number> | null> {
-  const url = await urlSpotrac(nome);
-  if (!url) return null;
+// Ritorna { stagione(Spotrac): cap_hit } dato l'URL del profilo.
+async function caphitFromUrl(url: string, stagioni: string[]): Promise<Record<string, number> | null> {
   try {
     const r = await richiesta(url);
     if (r.status !== 200) return null;
@@ -109,16 +107,20 @@ export interface SyncResult {
   role: string | null;
   // cap hit per indice di stagione (allineato a league.seasons), null se non trovato
   sal: (number | null)[];
+  spotracUrl: string | null; // URL diretto del profilo NBA (per il link ↗)
   found: boolean;
 }
 
 // stagioni = league.seasons (es. ["2025/26",...]); le converto al formato Spotrac ("2025-26").
 export async function syncPlayer(nome: string, stagioni: string[]): Promise<SyncResult> {
   const spotracSeasons = stagioni.map((s) => s.replace('/', '-'));
-  const [role, caphits] = await Promise.all([
-    ruoloSportsws(nome),
-    caphitSpotrac(nome, spotracSeasons),
-  ]);
+  const [role, url] = await Promise.all([ruoloSportsws(nome), urlSpotrac(nome)]);
+  const caphits = url ? await caphitFromUrl(url, spotracSeasons) : null;
   const sal = spotracSeasons.map((s) => (caphits && caphits[s]) || null);
-  return { role, sal, found: role !== null || sal.some((v) => v !== null) };
+  return {
+    role,
+    sal,
+    spotracUrl: url,
+    found: role !== null || sal.some((v) => v !== null) || !!url,
+  };
 }

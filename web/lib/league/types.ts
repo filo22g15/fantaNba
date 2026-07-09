@@ -34,6 +34,7 @@ export interface Player {
   opt: Opt[];             // 5 stagioni
   pnd?: number[];         // rinnovi proposti (5 stagioni)
   dead?: Dead;            // penale da taglio con rifirma altrove
+  spotrac?: string;       // URL diretto del profilo Spotrac (per il link ↗)
   [k: string]: unknown;   // campi extra tollerati
 }
 

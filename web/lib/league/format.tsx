@@ -37,11 +37,13 @@ export function OptBadge({ o }: { o: Opt }) {
   );
 }
 
-export function Spotrac({ n }: { n: string }) {
+export function Spotrac({ n, url }: { n: string; url?: string }) {
+  // Se abbiamo l'URL del profilo lo usiamo diretto, altrimenti la ricerca.
+  const href = url || `https://www.spotrac.com/search?q=${encodeURIComponent(n)}`;
   return (
     <a
       className="ext"
-      href={`https://www.spotrac.com/search?q=${encodeURIComponent(n)}`}
+      href={href}
       target="_blank"
       rel="noopener"
       title={`Vedi ${n} su Spotrac`}
